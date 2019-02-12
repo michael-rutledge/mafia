@@ -27,6 +27,11 @@ sio.sockets.on('connection', (socket) => {
         socketId: socket.conn.id
     });
 
+    socket.on('userAttemptEntry', (data) => {
+        // TODO: actually keep track of users that connect per room
+        console.log('User ' + socket.conn.id + ' attempted entry');
+    });
+
     socket.on('disconnect', () => {
         if (DEBUG)
             console.log('socket ' + socket.conn.id + ' disconnected');
