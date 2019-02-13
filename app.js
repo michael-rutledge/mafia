@@ -28,8 +28,10 @@ sio.sockets.on('connection', (socket) => {
     });
 
     socket.on('userAttemptEntry', (data) => {
-        // TODO: actually keep track of users that connect per room
         console.log('User ' + socket.conn.id + ' attempted entry');
+        if (data.name.length < 1 || data.room.length < 1) return;
+        socket.join(data.room);
+        socket.emit('entrySuccess', { room: data.room });
     });
 
     socket.on('disconnect', () => {

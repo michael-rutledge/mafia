@@ -1,21 +1,28 @@
 <html>
 
 
+<head>
+    <title>MAFIA</title>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.0/css/bootstrap.min.css" integrity="sha384-PDle/QlgIONtM1aqA2Qemk5gPOE7wFq8+Em+G/hmo5Iq0CCmYZLv3fVRDJ4MMwEA" crossorigin="anonymous">
+</head>
+
 <body>
     <div id="divEntry">
         <h1 class="titleText">Welcome to MAFIA by doggify.</h1>
         <form id="entryForm">
             <input class="entryText" id="entryTextName" placeholder="Enter your name" type="text" />
+            <input class="entryText" id="entryTextRoom" placeholder="Room code" type="text" />
             <input class="entryButton" id="entryButtonJoin" value="Join Room" type="submit" />
         </form>
     </div>
-</body>
 
-<head>
-    <title>MAFIA</title>
+    <div id="divGame" style="display: none">
+        <h2 id="roomHeader"></h2>
+    </div>
+
     <script src="https://cdn.socket.io/socket.io-1.4.5.js"></script>
     <script src="client/js/landing.js"></script>
-</head>
+</body>
 
 
 </html>
