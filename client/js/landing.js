@@ -8,6 +8,7 @@ var entryTextRoom = document.getElementById('entryTextRoom');
 var entryButtonJoin = document.getElementById('entryButtonJoin');
 var divGame = document.getElementById('divGame');
 var roomHeader = document.getElementById('roomHeader');
+var playerCountHeader = document.getElementById('playerCountHeader');
 
 // html element actions
 entryForm.onsubmit = (e) => {
@@ -17,15 +18,30 @@ entryForm.onsubmit = (e) => {
     socket.emit('userAttemptEntry', { name: name, room: room });
 };
 
+// utility functions
+var getElem = (id) => {
+    return document.getElementById(id);
+};
+
+var clearEntry = () => {
+    entryTextName.value = '';
+    entryTextRoom.value = '';
+};
+
 // socket events
 socket.on('entrySuccess', (data) => {
     roomHeader.innerHTML = "Room: " + data.room;
     divGame.style.display = "inline";
     divEntry.style.display = "none";
-    entryTextName.value = '';
-    entryTextRoom.value = '';
+    clearEntry();
 });
 
-socket.on('clientConnectMsg', (data) => {
+socket.on('playersUpdate', (data) => {
+    console.log('playerCountUpdate');
+    playerCountHeader.innerHTML = 'Player count: ' + data.players.length;
+});
+
+socket.on('clientConnected', (data) => {
+    clearEntry();
     console.log('You are connected with socket: ' + data.socketId);
 });

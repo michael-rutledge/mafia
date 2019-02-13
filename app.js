@@ -23,19 +23,30 @@ sio.sockets.on('connection', (socket) => {
         console.log('socket ' + socket.conn.id + ' connected');
     }
 
-    socket.emit('clientConnectMsg', {
+    socket.emit('clientConnected', {
         socketId: socket.conn.id
     });
 
     socket.on('userAttemptEntry', (data) => {
         console.log('User ' + socket.conn.id + ' attempted entry');
         if (data.name.length < 1 || data.room.length < 1) return;
-        socket.join(data.room);
-        socket.emit('entrySuccess', { room: data.room });
+        entrySuccess(socket, data.room);
     });
 
     socket.on('disconnect', () => {
-        if (DEBUG)
+        if (DEBUG) {
             console.log('socket ' + socket.conn.id + ' disconnected');
+        }
     });
 });
+
+function entrySuccess(socket, room) {
+    socket.join(room, (/*callback*/) => {
+        socket.emit('entrySuccess', { room: room });
+        sio.to(room).emit('playersUpdate', {
+            players: sio.sockets.adapter.rooms[room]
+        });
+        console.log(socket.rooms);
+        console.log(sio.sockets.adapter.rooms[room].length);
+    });
+}
