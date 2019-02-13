@@ -37,7 +37,7 @@ socket.on('entrySuccess', (data) => {
 });
 
 socket.on('playersUpdate', (data) => {
-    console.log('playerCountUpdate');
+    console.log('playersUpdate');
     playerCountHeader.innerHTML = 'Player count: ' + data.players.length;
 });
 
