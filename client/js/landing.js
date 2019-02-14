@@ -9,6 +9,7 @@ var entryButtonJoin = document.getElementById('entryButtonJoin');
 var divGame = document.getElementById('divGame');
 var roomHeader = document.getElementById('roomHeader');
 var playerList = document.getElementById('playerList');
+var leaveButton = document.getElementById('leaveButton');
 
 // state variables
 var savedUserInfo;
@@ -19,6 +20,11 @@ entryForm.onsubmit = (e) => {
     e.preventDefault();
     socket.emit('userAttemptEntry', { name: entryTextName.value, room: entryTextRoom.value });
 };
+
+leaveButton.onclick = () => {
+    socket.emit('userAttemptLeave', savedUserInfo);
+};
+
 
 // utility functions
 var getElem = (id) => {
@@ -39,11 +45,17 @@ socket.on('entrySuccess', (data) => {
     clearEntry();
 });
 
+socket.on('leaveSuccess', () => {
+    savedUserInfo = undefined;
+    divEntry.style.display = "inline";
+    divGame.style.display = "none";
+});
+
 socket.on('playersUpdate', (data) => {
     console.log('playersUpdate');
     playerList.innerHTML = '<ul>';
     for (var player in data.players) {
-        playerList.innerHTML += '<li>' + player.id + '</li>';
+        playerList.innerHTML += '<li>' + player + '</li>';
     }
     playerList.innerHTML += '</ul>';
 });

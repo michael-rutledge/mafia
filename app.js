@@ -33,6 +33,12 @@ sio.sockets.on('connection', (socket) => {
         entrySuccess(socket, data);
     });
 
+    socket.on('userAttemptLeave', (data) => {
+        debugLog('User ' + socket.id + ' attempted leave');
+        leaveRoom(socket, data.room);
+        socket.emit('leaveSuccess');
+    });
+
     socket.on('disconnecting', () => {
         debugLog(socket.id + ' disconnecting...');
         for (var room in socket.rooms) {
