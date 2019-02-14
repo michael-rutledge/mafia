@@ -10,12 +10,14 @@ var divGame = document.getElementById('divGame');
 var roomHeader = document.getElementById('roomHeader');
 var playerList = document.getElementById('playerList');
 
+// state variables
+var savedUserInfo;
+
+
 // html element actions
 entryForm.onsubmit = (e) => {
     e.preventDefault();
-    var name = entryTextName.value;
-    var room = entryTextRoom.value;
-    socket.emit('userAttemptEntry', { name: name, room: room });
+    socket.emit('userAttemptEntry', { name: entryTextName.value, room: entryTextRoom.value });
 };
 
 // utility functions
@@ -30,6 +32,7 @@ var clearEntry = () => {
 
 // socket events
 socket.on('entrySuccess', (data) => {
+    savedUserInfo = data;
     roomHeader.innerHTML = "Room: " + data.room;
     divGame.style.display = "inline";
     divEntry.style.display = "none";
@@ -43,6 +46,11 @@ socket.on('playersUpdate', (data) => {
         playerList.innerHTML += '<li>' + player.id + '</li>';
     }
     playerList.innerHTML += '</ul>';
+});
+
+socket.on('reconnect', () => {
+    console.log('RECONNECT');
+    socket.emit('userAttemptEntry', savedUserInfo);
 });
 
 socket.on('clientConnected', (data) => {

@@ -28,7 +28,8 @@ sio.sockets.on('connection', (socket) => {
 
     socket.on('userAttemptEntry', (data) => {
         debugLog('User ' + socket.id + ' attempted entry');
-        if (data.name.length < 1 || data.room.length < 1) return;
+        // TODO: sanitize input
+        if (!data || data.name.length < 1 || data.room.length < 1) return;
         entrySuccess(socket, data);
     });
 
@@ -54,13 +55,17 @@ function leaveRoom(socket, room) {
 }
 
 function playersUpdate(room) {
-    sio.to(room).emit('playersUpdate', {
-        // TODO: use room socket list to generate user data
-        players: sio.sockets.adapter.rooms[room]//.sockets
-    });
+    // if room exists, push the update
     if (sio.sockets.adapter.rooms[room]) {
+        sio.to(room).emit('playersUpdate', {
+            // TODO: use room socket list to generate user data
+            players: sio.sockets.adapter.rooms[room].sockets
+        });
         console.log(sio.sockets.adapter.rooms[room]);
         debugLog('Players left in ' + room + ': ' + sio.sockets.adapter.rooms[room].length);
+    }
+    else {
+        debugLog('All players gone from room ' + room);
     }
 }
 
