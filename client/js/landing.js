@@ -8,7 +8,7 @@ var entryTextRoom = document.getElementById('entryTextRoom');
 var entryButtonJoin = document.getElementById('entryButtonJoin');
 var divGame = document.getElementById('divGame');
 var roomHeader = document.getElementById('roomHeader');
-var playerCountHeader = document.getElementById('playerCountHeader');
+var playerList = document.getElementById('playerList');
 
 // html element actions
 entryForm.onsubmit = (e) => {
@@ -38,7 +38,11 @@ socket.on('entrySuccess', (data) => {
 
 socket.on('playersUpdate', (data) => {
     console.log('playersUpdate');
-    playerCountHeader.innerHTML = 'Player count: ' + data.players.length;
+    playerList.innerHTML = '<ul>';
+    for (var player in data.players) {
+        playerList.innerHTML += '<li>' + player.id + '</li>';
+    }
+    playerList.innerHTML += '</ul>';
 });
 
 socket.on('clientConnected', (data) => {

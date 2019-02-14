@@ -20,16 +20,16 @@ console.log('Server started.');
 
 // properties for all sockets
 sio.sockets.on('connection', (socket) => {
-    debugLog('socket ' + socket.conn.id + ' connected');
+    debugLog('socket ' + socket.id + ' connected');
 
     socket.emit('clientConnected', {
-        socketId: socket.conn.id
+        socketId: socket.id
     });
 
     socket.on('userAttemptEntry', (data) => {
-        debugLog('User ' + socket.conn.id + ' attempted entry');
+        debugLog('User ' + socket.id + ' attempted entry');
         if (data.name.length < 1 || data.room.length < 1) return;
-        entrySuccess(socket, data.room);
+        entrySuccess(socket, data);
     });
 
     socket.on('disconnecting', () => {
@@ -41,7 +41,7 @@ sio.sockets.on('connection', (socket) => {
     });
 
     socket.on('disconnect', () => {
-        debugLog('socket ' + socket.conn.id + ' disconnected');
+        debugLog('socket ' + socket.id + ' disconnected');
     });
 });
 
@@ -55,17 +55,20 @@ function leaveRoom(socket, room) {
 
 function playersUpdate(room) {
     sio.to(room).emit('playersUpdate', {
-        players: sio.sockets.adapter.rooms[room]
+        // TODO: use room socket list to generate user data
+        players: sio.sockets.adapter.rooms[room]//.sockets
     });
     if (sio.sockets.adapter.rooms[room]) {
+        console.log(sio.sockets.adapter.rooms[room]);
         debugLog('Players left in ' + room + ': ' + sio.sockets.adapter.rooms[room].length);
     }
 }
 
-function entrySuccess(socket, room) {
-    socket.join(room, (/*callback*/) => {
-        socket.emit('entrySuccess', { room: room });
-        playersUpdate(room);
+function entrySuccess(socket, data) {
+    socket.join(data.room, (/*callback*/) => {
+        socket.name = data.name;
+        socket.emit('entrySuccess', data);
+        playersUpdate(data.room);
         debugLog('Room map for ' + socket.id);
         debugLog(socket.rooms);
     });
