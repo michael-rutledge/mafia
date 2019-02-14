@@ -5,7 +5,7 @@ const serv = require('http').Server(app);
 const sio = require('socket.io')(serv, {});
 
 // internal requires
-const Hasher = require('./server/hasher');
+const MafiaManager = require('./server/mafiaManager');
 
 // constants and vars
 const DEBUG = true
@@ -26,11 +26,35 @@ sio.sockets.on('connection', (socket) => {
         socketId: socket.id
     });
 
-    socket.on('userAttemptEntry', (data) => {
-        debugLog('User ' + socket.id + ' attempted entry');
-        // TODO: sanitize input
+    socket.on('userAttemptJoin', (data) => {
+        debugLog('User ' + socket.id + ' attempted join');
+        // TODO: sanitize input and check if room was created first
         if (!data || data.name.length < 1 || data.room.length < 1) return;
-        entrySuccess(socket, data);
+        if (MafiaManager.roomExists(data.room)) {
+            joinSuccess(socket, data);
+        }
+        else {
+            // TODO: have failure case
+        }
+    });
+
+    socket.on('userAttemptRejoin', (data) => {
+        // TODO: santize saved data
+        if (data) {
+            // force refresh of state in same room
+            MafiaManager.getRoomState(data.room);
+            joinSuccess(socket, data);
+            // TODO: handle that refresh
+        }
+        else {
+            // TODO: have failure case
+        }
+    });
+
+    socket.on('userAttemptCreate', (data) => {
+        // TODO: sanitize input
+        data.room = MafiaManager.reserveNewRoom();
+        joinSuccess(socket, data);
     });
 
     socket.on('userAttemptLeave', (data) => {
@@ -72,13 +96,14 @@ function playersUpdate(room) {
     }
     else {
         debugLog('All players gone from room ' + room);
+        MafiaManager.removeRoom(room);
     }
 }
 
-function entrySuccess(socket, data) {
+function joinSuccess(socket, data) {
     socket.join(data.room, (/*callback*/) => {
         socket.name = data.name;
-        socket.emit('entrySuccess', data);
+        socket.emit('joinSuccess', data);
         playersUpdate(data.room);
         debugLog('Room map for ' + socket.id);
         debugLog(socket.rooms);

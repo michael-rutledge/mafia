@@ -2,10 +2,10 @@ const socket = io();
 
 // html elements
 var divEntry = document.getElementById('divEntry');
-var entryForm = document.getElementById('entryForm');
 var entryTextName = document.getElementById('entryTextName');
 var entryTextRoom = document.getElementById('entryTextRoom');
 var entryButtonJoin = document.getElementById('entryButtonJoin');
+var entryButtonCreate = document.getElementById('entryButtonCreate');
 var divGame = document.getElementById('divGame');
 var roomHeader = document.getElementById('roomHeader');
 var playerList = document.getElementById('playerList');
@@ -16,9 +16,12 @@ var savedUserInfo;
 
 
 // html element actions
-entryForm.onsubmit = (e) => {
-    e.preventDefault();
-    socket.emit('userAttemptEntry', { name: entryTextName.value, room: entryTextRoom.value });
+entryButtonJoin.onclick = () => {
+    socket.emit('userAttemptJoin', { name: entryTextName.value, room: entryTextRoom.value });
+};
+
+entryButtonCreate.onclick = () => {
+    socket.emit('userAttemptCreate', { name: entryTextName.value });
 };
 
 leaveButton.onclick = () => {
@@ -36,8 +39,9 @@ var clearEntry = () => {
     entryTextRoom.value = '';
 };
 
+
 // socket events
-socket.on('entrySuccess', (data) => {
+socket.on('joinSuccess', (data) => {
     savedUserInfo = data;
     roomHeader.innerHTML = "Room: " + data.room;
     divGame.style.display = "inline";
@@ -62,7 +66,7 @@ socket.on('playersUpdate', (data) => {
 
 socket.on('reconnect', () => {
     console.log('RECONNECT');
-    socket.emit('userAttemptEntry', savedUserInfo);
+    socket.emit('userAttemptRejoin', savedUserInfo);
 });
 
 socket.on('clientConnected', (data) => {
