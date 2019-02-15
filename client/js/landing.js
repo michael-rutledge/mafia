@@ -1,3 +1,4 @@
+// constants
 const socket = io();
 
 // html elements
@@ -58,10 +59,12 @@ socket.on('leaveSuccess', () => {
 socket.on('playersUpdate', (data) => {
     console.log('playersUpdate');
     playerList.innerHTML = '<ul>';
-    for (var player in data.players) {
-        playerList.innerHTML += '<li>' + player + '</li>';
+    for (var name in data.state.players) {
+        playerList.innerHTML += '<li>' + name + '</li>';
     }
     playerList.innerHTML += '</ul>';
+    console.log('STATE INCOMING');
+    console.log(data.state);
 });
 
 socket.on('reconnect', () => {

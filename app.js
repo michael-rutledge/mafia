@@ -1,8 +1,11 @@
-// node requires
+// server requires
 const express = require('express');
 const app = express();
 const serv = require('http').Server(app);
 const sio = require('socket.io')(serv, {});
+
+// node requires
+const sanitizeHtml = require('sanitize-html');
 
 // internal requires
 const MafiaManager = require('./server/mafiaManager');
@@ -28,7 +31,9 @@ sio.sockets.on('connection', (socket) => {
 
     socket.on('userAttemptJoin', (data) => {
         debugLog('User ' + socket.id + ' attempted join');
-        // TODO: sanitize input and check if room was created first
+        // TODO: handle people fucking with maxlength in input
+        data.name = getSanitizedString(data.name);
+        data.room = getSanitizedString(data.room);
         if (!data || data.name.length < 1 || data.room.length < 1) return;
         if (MafiaManager.roomExists(data.room)) {
             joinSuccess(socket, data);
@@ -39,10 +44,11 @@ sio.sockets.on('connection', (socket) => {
     });
 
     socket.on('userAttemptRejoin', (data) => {
-        // TODO: santize saved data
         if (data) {
+            data.name = getSanitizedString(data.name);
+            data.room = getSanitizedString(data.room);
             // force refresh of state in same room
-            MafiaManager.getRoomState(data.room);
+            MafiaManager.touchRoomState(data.room);
             joinSuccess(socket, data);
             // TODO: handle that refresh
         }
@@ -52,14 +58,18 @@ sio.sockets.on('connection', (socket) => {
     });
 
     socket.on('userAttemptCreate', (data) => {
-        // TODO: sanitize input
+        data.name = getSanitizedString(data.name);
+        // TODO: clean up the input check logic
+        if (!data || data.name.length < 1) return;
         data.room = MafiaManager.reserveNewRoom();
         joinSuccess(socket, data);
     });
 
     socket.on('userAttemptLeave', (data) => {
+        data.name = getSanitizedString(data.name);
+        data.room = getSanitizedString(data.room);
         debugLog('User ' + socket.id + ' attempted leave');
-        leaveRoom(socket, data.room);
+        leaveRoom(socket, data);
         socket.emit('leaveSuccess');
     });
 
@@ -78,9 +88,10 @@ sio.sockets.on('connection', (socket) => {
 
 
 // room functions
-function leaveRoom(socket, room) {
-    socket.leave(room, (/*callback*/) => {
-        playersUpdate(room);
+function leaveRoom(socket, data) {
+    socket.leave(data.room, (/*callback*/) => {
+        MafiaManager.removeUserFromRoom(data.name, data.room);
+        playersUpdate(data.room);
     });
 }
 
@@ -89,18 +100,22 @@ function playersUpdate(room) {
     if (sio.sockets.adapter.rooms[room]) {
         sio.to(room).emit('playersUpdate', {
             // TODO: use room socket list to generate user data
-            players: sio.sockets.adapter.rooms[room].sockets
+            state: MafiaManager.getRoomState(room)
         });
         console.log(sio.sockets.adapter.rooms[room]);
         debugLog('Players left in ' + room + ': ' + sio.sockets.adapter.rooms[room].length);
     }
     else {
-        debugLog('All players gone from room ' + room);
+        debugLog('No players here; removing room ' + room);
         MafiaManager.removeRoom(room);
     }
 }
 
 function joinSuccess(socket, data) {
+    if (!MafiaManager.addUserToRoom(socket, data.name, data.room)) {
+        debugLog('JOIN FAILURE: name already exists in room');
+        return;
+    }
     socket.join(data.room, (/*callback*/) => {
         socket.name = data.name;
         socket.emit('joinSuccess', data);
@@ -112,6 +127,12 @@ function joinSuccess(socket, data) {
 
 
 // utilities
+function getSanitizedString(dirty) {
+    return sanitizeHtml(dirty, {
+        allowedTags: ['b', 'i'],
+    });
+}
+
 function debugLog(msg) {
     if (DEBUG) console.log(msg);
 }
