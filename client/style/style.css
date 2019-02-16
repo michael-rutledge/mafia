@@ -1,5 +1,16 @@
+.col-centered {
+    float: none;
+    margin: 0 auto;
+}
+
 .entryButton {
     margin-top: 20px;
+}
+
+.gameCanvas {
+    background-color: #ffffff;
+    border: 2px solid #696969;
+    border-radius: 5px;
 }
 
 .playerBanner {

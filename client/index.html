@@ -12,11 +12,10 @@
 
 <body>
     <div class="container">
-    <div class="row">
 
-    <div id="divEntry">
-        <h1 class="titleText">Welcome to MAFIA by doggify.</h1>
-        <div class="jumbotron">
+    <div class="row" id="divEntry">
+        <div class="col-lg-4 col-md-6 col-sm-12 col-xs-12">
+            <h2 class="titleText">Join or create a room:</h2>
             <label class="entryFormLabel" for="entryTextName">Nickname</label>
             <input class="form-control" id="entryTextName" placeholder="Freddy" type="text" maxlength="20" />
             <label class="entryFormLabel" for="entryTextRoom">Room Code</label>
@@ -24,15 +23,31 @@
             <button type="button" class="btn btn-primary entryButton" id="entryButtonJoin">Join Room</button>
             <button type="button" class="btn btn-primary entryButton" id="entryButtonCreate">Create Room</button>
         </div>
+        <div class="col-lg-8 col-md-6 col-sm-12 col-xs-12">
+            <div class="jumbotron">
+                <h2>Welcome to MAFIA by doggify.</h2>
+                <p>Finally, we can play the dopest party game of all time, online for free!</p>
+            </div>
+        </div>
     </div>
 
     <div id="divGame" style="display: none">
-        <h2 id="roomHeader"></h2>
-        <div id="playerList"></div>
+        <div class="row">
+            <div class="col-lg-12 col-md-12 col-sm-12 col-xs-12">
+                <h2 id="roomHeader"></h2>
+            </div>
+        </div>
+        <div class="row gameCanvas">
+            <div class="col-lg-12 col-md-12 col-sm-12 col-xs-12">
+                <h2 id="stateMessage" style="text-align: center;">STATE_MESSAGE</h2>
+            </div>
+            <div class="col-lg-4 col-md-6 col-sm-12 col-xs-12">
+                <div id="playerList"></div>
+            </div>
+        </div>
         <button type="button" class="btn btn-danger" id="leaveButton">Leave Room</button>
     </div>
 
-    </div>
     </div>
 
     <script src="https://cdn.socket.io/socket.io-1.4.5.js"></script>

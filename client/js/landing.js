@@ -45,14 +45,14 @@ var clearEntry = () => {
 socket.on('joinSuccess', (data) => {
     savedUserInfo = data;
     roomHeader.innerHTML = "Room: " + data.room;
-    divGame.style.display = "inline";
+    divGame.style.display = "";
     divEntry.style.display = "none";
     clearEntry();
 });
 
 socket.on('leaveSuccess', () => {
     savedUserInfo = undefined;
-    divEntry.style.display = "inline";
+    divEntry.style.display = "";
     divGame.style.display = "none";
 });
 
