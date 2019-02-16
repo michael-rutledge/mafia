@@ -37,12 +37,8 @@ sio.sockets.on('connection', (socket) => {
         data.name = getSanitizedString(data.name);
         data.room = getSanitizedString(data.room);
         if (!data || data.name.length < 1 || data.room.length < 1) return;
-        if (MafiaManager.roomExists(data.room)) {
-            joinSuccess(socket, data);
-        }
-        else {
-            // TODO: have failure case
-        }
+        // TODO: handle failure case
+        attemptJoin(socket, data);
     });
 
     socket.on('userAttemptRejoin', (data) => {
@@ -51,11 +47,7 @@ sio.sockets.on('connection', (socket) => {
             data.room = getSanitizedString(data.room);
             // force refresh of state in same room
             MafiaManager.touchRoomState(data.room);
-            joinSuccess(socket, data);
-            // TODO: handle that refresh
-        }
-        else {
-            // TODO: have failure case
+            attemptJoin(socket, data);
         }
     });
 
@@ -64,7 +56,7 @@ sio.sockets.on('connection', (socket) => {
         // TODO: clean up the input check logic
         if (!data || data.name.length < 1) return;
         data.room = MafiaManager.reserveNewRoom();
-        joinSuccess(socket, data);
+        attemptJoin(socket, data);
     });
 
     socket.on('userAttemptLeave', () => {
@@ -111,10 +103,10 @@ function pushStateToClient(room) {
     }
 }
 
-function joinSuccess(socket, data) {
+function attemptJoin(socket, data) {
     if (!MafiaManager.addUserToRoom(socket, data.name, data.room)) {
-        debugLog('JOIN FAILURE: name already exists in room');
-        return;
+        debugLog('JOIN FAILURE');
+        return false;
     }
     socket.join(data.room, (/*callback*/) => {
         socket.name = data.name;
@@ -123,6 +115,7 @@ function joinSuccess(socket, data) {
         debugLog('Room map for ' + socket.id);
         debugLog(socket.rooms);
     });
+    return true;
 }
 
 

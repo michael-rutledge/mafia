@@ -38,8 +38,8 @@ function addUserToRoom(socket, name, room) {
 
 function removeUserFromRoom(socket, room) {
     // TODO: this sucker needs a rehaul to do username check during active game
-    roomState = getRoomState(room);
-    if (roomState) {
+    if (roomExists(room)) {
+        roomState = getRoomState(room);
         name = roomState.socketNames[socket.id];
         if (name !== undefined && roomState.players[name]) {
             delete roomState.players[name];
