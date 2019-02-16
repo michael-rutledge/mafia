@@ -58,11 +58,10 @@ socket.on('leaveSuccess', () => {
 
 socket.on('pushStateToClient', (data) => {
     console.log('playersUpdate');
-    playerList.innerHTML = '<ul>';
+    playerList.innerHTML = '';
     for (var name in data.state.players) {
-        playerList.innerHTML += '<li>' + name + '</li>';
+        playerList.innerHTML += genPlayerBanner(name, data.state.players[name]);
     }
-    playerList.innerHTML += '</ul>';
     console.log('STATE INCOMING');
     console.log(data.state);
 });

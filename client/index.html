@@ -2,26 +2,40 @@
 
 
 <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width = device-width, initial-scale = 1">
     <title>MAFIA</title>
     <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.0/css/bootstrap.min.css" integrity="sha384-PDle/QlgIONtM1aqA2Qemk5gPOE7wFq8+Em+G/hmo5Iq0CCmYZLv3fVRDJ4MMwEA" crossorigin="anonymous">
 </head>
 
+
 <body>
+    <div class="container">
+    <div class="row">
+
     <div id="divEntry">
         <h1 class="titleText">Welcome to MAFIA by doggify.</h1>
-        <input class="entryText" id="entryTextName" placeholder="Enter your name" type="text" maxlength="20" />
-        <input class="entryText" id="entryTextRoom" placeholder="Room code" type="text" maxlength="4" />
-        <button class="entryButton" id="entryButtonJoin">Join Room</button>
-        <button class="entryButton" id="entryButtonCreate">Create Room</button>
+        <div class="jumbotron">
+            <label class="entryFormLabel" for="entryTextName">Nickname</label>
+            <input class="form-control" id="entryTextName" placeholder="Freddy" type="text" maxlength="20" />
+            <label class="entryFormLabel" for="entryTextRoom">Room Code</label>
+            <input class="form-control" id="entryTextRoom" placeholder="abcd" type="text" maxlength="4" />
+            <button type="button" class="btn btn-primary" id="entryButtonJoin">Join Room</button>
+            <button type="button" class="btn btn-primary" id="entryButtonCreate">Create Room</button>
+        </div>
     </div>
 
     <div id="divGame" style="display: none">
         <h2 id="roomHeader"></h2>
         <div id="playerList"></div>
-        <button id="leaveButton">Leave Room</button>
+        <button type="button" class="btn btn-danger" id="leaveButton">Leave Room</button>
+    </div>
+
+    </div>
     </div>
 
     <script src="https://cdn.socket.io/socket.io-1.4.5.js"></script>
+    <script src="client/js/elemMaker.js"></script>
     <script src="client/js/landing.js"></script>
 </body>
 
