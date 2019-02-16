@@ -29,17 +29,21 @@ function addUserToRoom(socket, name, room) {
                 role: 0,
                 alive: true
             }
+            roomState.socketNames[socket.id] = name;
             return true;
         }
     }
     return false;
 }
 
-function removeUserFromRoom(name, room) {
+function removeUserFromRoom(socket, room) {
+    // TODO: this sucker needs a rehaul to do username check during active game
     roomState = getRoomState(room);
     if (roomState) {
-        if (roomState.players[name]) {
+        name = roomState.socketNames[socket.id];
+        if (name !== undefined && roomState.players[name]) {
             delete roomState.players[name];
+            delete roomState.socketNames[socket.id];
             return true;
         }
     }
@@ -58,7 +62,8 @@ function touchRoomState(room) {
 function constructNewRoomState(room) {
     roomStates[room] = {
         gameState: 0,
-        players: {}
+        players: {},
+        socketNames: {}
     }
     return roomStates[room];
 }

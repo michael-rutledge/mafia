@@ -26,7 +26,7 @@ entryButtonCreate.onclick = () => {
 };
 
 leaveButton.onclick = () => {
-    socket.emit('userAttemptLeave', savedUserInfo);
+    socket.emit('userAttemptLeave');
 };
 
 
@@ -56,7 +56,7 @@ socket.on('leaveSuccess', () => {
     divGame.style.display = "none";
 });
 
-socket.on('playersUpdate', (data) => {
+socket.on('pushStateToClient', (data) => {
     console.log('playersUpdate');
     playerList.innerHTML = '<ul>';
     for (var name in data.state.players) {

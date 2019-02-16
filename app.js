@@ -24,6 +24,8 @@ console.log('Server started.');
 // properties for all sockets
 sio.sockets.on('connection', (socket) => {
     debugLog('socket ' + socket.id + ' connected');
+    debugLog('default rooms: ');
+    debugLog(sio.sockets.adapter.rooms);
 
     socket.emit('clientConnected', {
         socketId: socket.id
@@ -65,20 +67,15 @@ sio.sockets.on('connection', (socket) => {
         joinSuccess(socket, data);
     });
 
-    socket.on('userAttemptLeave', (data) => {
-        data.name = getSanitizedString(data.name);
-        data.room = getSanitizedString(data.room);
+    socket.on('userAttemptLeave', () => {
         debugLog('User ' + socket.id + ' attempted leave');
-        leaveRoom(socket, data);
+        leaveRoom(socket);
         socket.emit('leaveSuccess');
     });
 
     socket.on('disconnecting', () => {
         debugLog(socket.id + ' disconnecting...');
-        for (var room in socket.rooms) {
-            debugLog('    from room: ' + room);
-            leaveRoom(socket, room);
-        }
+        leaveRoom(socket);
     });
 
     socket.on('disconnect', () => {
@@ -88,17 +85,20 @@ sio.sockets.on('connection', (socket) => {
 
 
 // room functions
-function leaveRoom(socket, data) {
-    socket.leave(data.room, (/*callback*/) => {
-        MafiaManager.removeUserFromRoom(data.name, data.room);
-        playersUpdate(data.room);
-    });
+function leaveRoom(socket) {
+    var room = getRoomOfSocket(socket);
+    if (room) {
+        socket.leave(room, (/*callback*/) => {
+            MafiaManager.removeUserFromRoom(socket, room);
+            pushStateToClient(room);
+        });
+    }
 }
 
-function playersUpdate(room) {
+function pushStateToClient(room) {
     // if room exists, push the update
     if (sio.sockets.adapter.rooms[room]) {
-        sio.to(room).emit('playersUpdate', {
+        sio.to(room).emit('pushStateToClient', {
             // TODO: use room socket list to generate user data
             state: MafiaManager.getRoomState(room)
         });
@@ -119,7 +119,7 @@ function joinSuccess(socket, data) {
     socket.join(data.room, (/*callback*/) => {
         socket.name = data.name;
         socket.emit('joinSuccess', data);
-        playersUpdate(data.room);
+        pushStateToClient(data.room);
         debugLog('Room map for ' + socket.id);
         debugLog(socket.rooms);
     });
@@ -127,6 +127,10 @@ function joinSuccess(socket, data) {
 
 
 // utilities
+function getRoomOfSocket(socket) {
+    return socket.rooms[Object.keys(socket.rooms)[1]];
+}
+
 function getSanitizedString(dirty) {
     return sanitizeHtml(dirty, {
         allowedTags: ['b', 'i'],
