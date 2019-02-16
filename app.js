@@ -126,7 +126,7 @@ function getRoomOfSocket(socket) {
 
 function getSanitizedString(dirty) {
     return sanitizeHtml(dirty, {
-        allowedTags: ['b', 'i'],
+        allowedTags: ['i'],
     });
 }
 

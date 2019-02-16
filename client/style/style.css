@@ -1,0 +1,10 @@
+.entryButton {
+    margin-top: 20px;
+}
+
+.playerBanner {
+    background-color: #dcdcdc;
+    border-radius: 5px;
+    padding: 5px 10px 5px 10px;
+    margin: 5px 0px 5px 0px;
+}

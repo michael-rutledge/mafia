@@ -60,7 +60,7 @@ socket.on('pushStateToClient', (data) => {
     console.log('playersUpdate');
     playerList.innerHTML = '';
     for (var name in data.state.players) {
-        playerList.innerHTML += genPlayerBanner(name, data.state.players[name]);
+        playerList.innerHTML += genPlayerBanner(name, data.state.players[name], socket);
     }
     console.log('STATE INCOMING');
     console.log(data.state);
