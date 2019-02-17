@@ -61,7 +61,8 @@ socket.on('pushStateToClient', (data) => {
     console.log('playersUpdate');
     playerList.innerHTML = '';
     for (var name in data.state.players) {
-        playerList.innerHTML += genPlayerBanner(name, data.state.players[name], socket);
+        playerList.innerHTML += genPlayerBanner(name, data.state.players[name],
+            socket, data.state.host);
     }
     stateMessage.innerHTML = genStateMessage(data.state.gameState);
     // TODO: make sure not to print this in final product, as it would give game away

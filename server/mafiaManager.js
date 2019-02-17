@@ -23,6 +23,7 @@ const MAFIA_WIN     = 6;
 const TOWN_WIN      = 7;
 
 
+// public functions
 function reserveNewRoom() {
     var newRoom;
     do {
@@ -48,6 +49,7 @@ function addUserToRoom(socket, name, room) {
                 ready: false
             }
             roomState.socketNames[socket.id] = name;
+            tryForHost(socket, roomState);
             return true;
         }
         // if name exists but we are in game, make sure the requested name has an open socket spot
@@ -56,6 +58,7 @@ function addUserToRoom(socket, name, room) {
             if (roomState.players[name].socketId !== null) {
                 roomState.players[name].socketId = socket.id;
                 roomState.socketNames[socket.id] = name;
+                tryForHost(socket, roomState);
                 return true;
             }
         }
@@ -74,6 +77,7 @@ function removeUserFromRoom(socket, room) {
             if (roomState.gameState === LOBBY) {
                 delete roomState.players[name];
             }
+            repickHost(roomState);
             return true;
         }
     }
@@ -92,6 +96,7 @@ function touchRoomState(room) {
 function constructNewRoomState(room) {
     roomStates[room] = {
         gameState: 0,
+        host: null,
         players: {},
         socketNames: {}
     }
@@ -101,6 +106,21 @@ function constructNewRoomState(room) {
 function removeRoom(room) {
     if (getRoomState(room))
         delete roomStates[room];
+    console.log('ROOMS LEFT: ' + Object.keys(roomStates).length);
+}
+
+
+// private utilities
+function tryForHost(socket, roomState) {
+    if (roomState.host === null) {
+        roomState.host = socket.id;
+    }
+}
+
+function repickHost(roomState) {
+    roomState.host = null;
+    newHostId = Object.keys(roomState.socketNames)[0];
+    roomState.host = newHostId ? newHostId : null;
 }
 
 

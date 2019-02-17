@@ -11,8 +11,10 @@ const STATE_MESSAGES= [
 
 // Create div element that represents player in game.
 // User will know who they are by bolded name.
-function genPlayerBanner(name, playerState, curSocket) {
+// Host will be italicized.
+function genPlayerBanner(name, playerState, curSocket, host) {
     name = playerState.socketId === curSocket.id ? '<b>'+name+'</b>' : name;
+    name = playerState.socketId === host ? '<i>'+name+'</i>' : name;
     return '<div class="playerBanner">' + name + '</div>';
 }
 
