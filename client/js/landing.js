@@ -12,6 +12,8 @@ var roomHeader = document.getElementById('roomHeader');
 var stateMessage = document.getElementById('stateMessage');
 var playerList = document.getElementById('playerList');
 var leaveButton = document.getElementById('leaveButton');
+var lobbyOptions = document.getElementById('lobbyOptions');
+var hostOptions = document.getElementById('hostOptions');
 
 // state variables
 var savedUserInfo;
@@ -65,6 +67,7 @@ socket.on('pushStateToClient', (data) => {
             socket, data.state.host);
     }
     stateMessage.innerHTML = genStateMessage(data.state.gameState);
+    setHostAndLobbyOptions(hostOptions, lobbyOptions, data.state, socket);
     // TODO: make sure not to print this in final product, as it would give game away
     console.log('STATE INCOMING');
     console.log(data.state);

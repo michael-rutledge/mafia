@@ -43,6 +43,33 @@
             </div>
             <div class="col-lg-8 col-md-6 col-sm-12 col-xs-12">
                 <h3 id="stateMessage" style="text-align: center;"></h3>
+                <div id="hostOptions">
+                    <p>You are the host.</p>
+                    <label>Mafia</label>
+                    <select class="form-control" id="hostMafiaSelect">
+                        <option>1</option>
+                        <option>2</option>
+                        <option>3</option>
+                    </select>
+                    <label>Cops</label>
+                    <select class="form-control" id="hostCopsSelect">
+                        <option>0</option>
+                        <option>1</option>
+                        <option>2</option>
+                    </select>
+                    <label>Doctors</label>
+                    <select class="form-control" id="hostDoctorsSelect">
+                        <option>0</option>
+                        <option>1</option>
+                    </select>
+                    <button type="button" class="btn btn-success" id="startButton">Start Game</button>
+                </div>
+                <div id="lobbyOptions">
+                    <label id="lobbyHostLabel">Host:</label><br>
+                    <label id="lobbyMafiaLabel">Mafia:</label><br>
+                    <label id="lobbyCopsLabel">Cops:</label><br>
+                    <label id="lobbyDoctorsLabel">Doctors:</label><br>
+                </div>
             </div>
         </div>
         <button type="button" class="btn btn-danger" id="leaveButton">Leave Room</button>

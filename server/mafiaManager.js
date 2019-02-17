@@ -4,7 +4,7 @@ const Hasher = require('./hasher');
 // management and constants
 var roomStates = {};
 const ROOM_CODE_LENGTH = 4;
-const MAX_PLAYERS = 20;
+const MAX_PLAYERS = 16;
 // roles
 const DEFAULT   = 0;
 const MAFIA     = 1;
@@ -90,13 +90,16 @@ function getRoomState(room) {
 
 function touchRoomState(room) {
     console.log('TOUCH ROOM STATE');
-    return getRoomState(room) ? getRoomState(room) : constructNewRoomState(room);
+    return roomExists(room) ? getRoomState(room) : constructNewRoomState(room);
 }
 
 function constructNewRoomState(room) {
     roomStates[room] = {
-        gameState: 0,
+        gameState: LOBBY,
         host: null,
+        numMafia: 1,
+        numCops: 0,
+        numDoctors: 0,
         players: {},
         socketNames: {}
     }
@@ -104,7 +107,7 @@ function constructNewRoomState(room) {
 }
 
 function removeRoom(room) {
-    if (getRoomState(room))
+    if (roomExists(room))
         delete roomStates[room];
     console.log('ROOMS LEFT: ' + Object.keys(roomStates).length);
 }
