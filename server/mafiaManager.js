@@ -44,7 +44,8 @@ function addUserToRoom(socket, name, room) {
             roomState.players[name] = {
                 socketId: socket.id,
                 role: DEFAULT,
-                alive: true
+                alive: true,
+                ready: false
             }
             roomState.socketNames[socket.id] = name;
             return true;

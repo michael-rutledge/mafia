@@ -9,6 +9,7 @@ var entryButtonJoin = document.getElementById('entryButtonJoin');
 var entryButtonCreate = document.getElementById('entryButtonCreate');
 var divGame = document.getElementById('divGame');
 var roomHeader = document.getElementById('roomHeader');
+var stateMessage = document.getElementById('stateMessage');
 var playerList = document.getElementById('playerList');
 var leaveButton = document.getElementById('leaveButton');
 
@@ -62,6 +63,7 @@ socket.on('pushStateToClient', (data) => {
     for (var name in data.state.players) {
         playerList.innerHTML += genPlayerBanner(name, data.state.players[name], socket);
     }
+    stateMessage.innerHTML = genStateMessage(data.state.gameState);
     // TODO: make sure not to print this in final product, as it would give game away
     console.log('STATE INCOMING');
     console.log(data.state);
