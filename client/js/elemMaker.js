@@ -1,19 +1,27 @@
 // constants according to rules set in mafiaManger.js
 const STATE_MESSAGES= [
     'Welcome to the lobby. Once enough players join, the host can start the game.',
-    'It is now nighttime. Mafia, please choose your victim.',
+    'Mafia, please choose your victim.',
     'Detective, please choose your suspect to investigate.',
-    'Doctor, please who you would like to save.',
+    'Doctor, please choose who you would like to save.',
     'It is now daytime. Everyone, please deliberate and vote who to kill off.',
     'There are only two innocents left. We need a handshake to settle this...',
     'Game over. Vote on whether to play again or go to the lobby.'
 ];
+const NIGHT_MESSAGE = 'You are currently asleep. But there are others out and about...';
 // roles (must be consistent with serverside code in mafiaManager.js)
 const DEFAULT   = 0;
 const MAFIA     = 1;
 const COP       = 2;
 const DOCTOR    = 3;
 const TOWN      = 4;
+const ROLES = [
+    '',
+    'Mafia',
+    'Cop',
+    'Doctor',
+    'Town'
+];
 // game states (must be consistent with serverside code in mafiaManager.js)
 const LOBBY         = 0;
 const MAFIA_TIME    = 1;
@@ -28,10 +36,11 @@ const TOWN_WIN      = 7;
 // Create div element that represents player in game.
 // User will know who they are by bolded name.
 // Host will be italicized.
-function genPlayerBanner(name, roomState, curSocket) {
+function getPlayerBanner(name, roomState, curSocket) {
     var player = roomState.players[name];
     var curPlayer = roomState.players[roomState.socketNames[curSocket.id]];
     var divClass = 'bannerPlayer';
+    name += player.socketId === null ? ' <i>(disconnected</i>)' : '';
     name = player.socketId === curSocket.id ? '<b>'+name+'</b>' : name;
     name = roomState.gameState === LOBBY && player.socketId === roomState.host ?
         '<i>'+name+'</i>' : name;
@@ -57,8 +66,23 @@ function genPlayerBanner(name, roomState, curSocket) {
     return '<div class="'+divClass+'">' + name + '</div>';
 }
 
-function genStateMessage(gameState) {
-    return STATE_MESSAGES[gameState];
+function getStateMessage(roomState, curSocket) {
+    var ret = STATE_MESSAGES[roomState.gameState];
+    var curPlayer = roomState.players[roomState.socketNames[curSocket.id]];
+    switch (roomState.gameState) {
+        case MAFIA_TIME:
+            ret = curPlayer.role === MAFIA ? ret : NIGHT_MESSAGE;
+            break;
+        case COP_TIME:
+            ret = curPlayer.role === COP ? ret : NIGHT_MESSAGE;
+            break;
+        case DOCTOR_TIME:
+            ret = curPlayer.role === DOCTOR ? ret : NIGHT_MESSAGE;
+            break;
+        default:
+            break;
+    }
+    return ret;
 }
 
 function setHostAndLobbyOptions(hoptions, loptions, state, curSocket) {
@@ -73,4 +97,17 @@ function setHostAndLobbyOptions(hoptions, loptions, state, curSocket) {
     document.getElementById('numMafia').value = state.numMafia;
     document.getElementById('numCops').value = state.numCops;
     document.getElementById('numDoctors').value = state.numDoctors;
+}
+
+function setLeaveButtonVisible(roomState) {
+    // TODO: make sure leave button event cannot be triggered serverside in-game
+    document.getElementById('leaveButton').style.display = roomState.gameState === LOBBY ?
+        '' : 'none';
+}
+
+function setRoleHeader(roomState, curSocket) {
+    document.getElementById('divRole').style.display = roomState.gameState === LOBBY ? 'none' : '';
+    var curPlayer = roomState.players[roomState.socketNames[curSocket.id]];
+    document.getElementById('roleHeader').innerHTML = curPlayer.alive ?
+        'Your role: ' + ROLES[curPlayer.role] : 'You are dead. :( All roles are now visible.';
 }

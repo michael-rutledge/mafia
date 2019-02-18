@@ -74,10 +74,13 @@ socket.on('pushStateToClient', (data) => {
     console.log('playersUpdate');
     playerList.innerHTML = '';
     for (var name in data.state.players) {
-        playerList.innerHTML += genPlayerBanner(name, data.state, socket);
+        playerList.innerHTML += getPlayerBanner(name, data.state, socket);
     }
-    stateMessage.innerHTML = genStateMessage(data.state.gameState);
+    setRoleHeader(data.state, socket);
+    stateMessage.innerHTML = getStateMessage(data.state, socket);
     setHostAndLobbyOptions(hostOptions, lobbyOptions, data.state, socket);
+    setLeaveButtonVisible(data.state);
+    // TODO: save user info here
     // TODO: make sure not to print this in final product, as it would give game away
     console.log('STATE INCOMING');
     console.log(data.state);
