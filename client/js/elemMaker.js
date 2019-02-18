@@ -35,15 +35,17 @@ const TOWN_WIN      = 7;
 
 // Create div element that represents player in game.
 // User will know who they are by bolded name.
-// Host will be italicized.
+// Host will be italicized in lobby.
 function getPlayerBanner(name, roomState, curSocket) {
     var player = roomState.players[name];
     var curPlayer = roomState.players[roomState.socketNames[curSocket.id]];
     var divClass = 'bannerPlayer';
-    name += player.socketId === null ? ' <i>(disconnected</i>)' : '';
-    name = player.socketId === curSocket.id ? '<b>'+name+'</b>' : name;
-    name = roomState.gameState === LOBBY && player.socketId === roomState.host ?
-        '<i>'+name+'</i>' : name;
+    var onclick = '';
+    var bannerName = name;
+    bannerName += player.socketId === null ? ' <i>(disconnected</i>)' : '';
+    bannerName = player.socketId === curSocket.id ? '<b>'+bannerName+'</b>' : bannerName;
+    bannerName = roomState.gameState === LOBBY && player.socketId === roomState.host ?
+        '<i>'+bannerName+'</i>' : bannerName;
     switch (player.role) {
         case MAFIA:
             divClass += curPlayer.role === MAFIA ? ' bannerMafia' : ' bannerDefault';
@@ -62,8 +64,12 @@ function getPlayerBanner(name, roomState, curSocket) {
             break;
     }
     divClass += !player.alive ? ' bannerDead' : '';
+    if (playerIsVotable(roomState, player, curPlayer)) {
+        divClass += ' bannerVotable';
+        onclick = 'playerVote(\'' + name + '\')';
+    }
     console.log('banner class: ' + divClass);
-    return '<div class="'+divClass+'">' + name + '</div>';
+    return '<div class="'+divClass+'" onclick="'+onclick+'">' + bannerName + '</div>';
 }
 
 function getStateMessage(roomState, curSocket) {
@@ -110,4 +116,35 @@ function setRoleHeader(roomState, curSocket) {
     var curPlayer = roomState.players[roomState.socketNames[curSocket.id]];
     document.getElementById('roleHeader').innerHTML = curPlayer.alive ?
         'Your role: ' + ROLES[curPlayer.role] : 'You are dead. :( All roles are now visible.';
+}
+
+
+// utility and helper functions
+function playerIsVotable(roomState, player, curPlayer) {
+    // dead people should not be votable and should not vote either
+    if (!curPlayer.alive || !player.alive) {
+        return false;
+    }
+    switch (roomState.gameState) {
+        // mafia can vote for anyone, even themselves
+        case MAFIA_TIME:
+            return curPlayer.role === MAFIA;
+            break;
+        // cops can only investigate non-cops who haven't been investigated
+        case COP_TIME:
+            return curPlayer.role === COP && player.role !== COP &&
+                player.copResult === null;
+            break;
+        // doctors can only save non-doctors
+        case DOCTOR_TIME:
+            return curPlayer.role === DOCTOR && player.role !== DOCTOR;
+            break;
+        // during deliberation, everyone can vote on anyone
+        case TOWN_TIME:
+            return true;
+            break;
+        default:
+            return false;
+            break;
+    }
 }

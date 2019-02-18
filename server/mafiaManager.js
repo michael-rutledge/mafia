@@ -58,11 +58,7 @@ function addUserToRoom(socket, name, room) {
         var roomState = getRoomState(room);
         // if player name doesn't exist and we are in lobby, go for add user
         if (!roomState.players[name] && roomState.gameState === LOBBY) {
-            roomState.players[name] = {
-                socketId: socket.id,
-                role: DEFAULT,
-                alive: true
-            }
+            roomState.players[name] = constructNewPlayer(socket.id);
             roomState.socketNames[socket.id] = name;
             tryForHost(socket, roomState);
             return true;
@@ -120,19 +116,6 @@ function touchRoomState(room) {
     return roomExists(room) ? getRoomState(room) : constructNewRoomState(room);
 }
 
-function constructNewRoomState(room) {
-    roomStates[room] = {
-        gameState: LOBBY,
-        host: null,
-        numMafia: 1,
-        numCops: 0,
-        numDoctors: 0,
-        players: {},
-        socketNames: {}
-    }
-    return roomStates[room];
-}
-
 function removeRoom(room) {
     if (roomExists(room))
         delete roomStates[room];
@@ -175,6 +158,34 @@ function checkRoles(roomState) {
     // there needs to be at least 3 innocents
     // because 2 results in showdown after 1 dies from mafia
     return (playerCount(roomState) - roomState.numMafia) >= 3;
+}
+
+function constructNewPlayer(socketId) {
+    return {
+        socketId: socketId,
+        role: DEFAULT,
+        alive: true,
+        mafiaTarget: false,
+        mafiaVotes: {},
+        copResult: null,
+        copTarget: false,
+        copVotes: {},
+        doctorTarget: false,
+        doctorVotes: {}
+    };
+}
+
+function constructNewRoomState(room) {
+    roomStates[room] = {
+        gameState: LOBBY,
+        host: null,
+        numMafia: 1,
+        numCops: 0,
+        numDoctors: 0,
+        players: {},
+        socketNames: {}
+    }
+    return roomStates[room];
 }
 
 function playerCount(roomState) {

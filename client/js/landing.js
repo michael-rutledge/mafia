@@ -54,6 +54,10 @@ document.getElementById('startButton').onclick = () => {
     socket.emit('startGame');
 };
 
+function playerVote(playerName) {
+    socket.emit('playerVote', { playerName: playerName });
+}
+
 
 // socket events
 socket.on('joinSuccess', (data) => {

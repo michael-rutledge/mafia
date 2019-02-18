@@ -28,6 +28,10 @@
     background-color: #d3c49e;
 }
 
+.bannerVotable:hover {
+    cursor: pointer;
+}
+
 .col-centered {
     float: none;
     margin: 0 auto;
