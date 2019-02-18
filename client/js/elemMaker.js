@@ -39,4 +39,7 @@ function setHostAndLobbyOptions(hoptions, loptions, state, curSocket) {
     document.getElementById('lobbyMafiaLabel').innerHTML = 'Mafia: ' + state.numMafia;
     document.getElementById('lobbyCopsLabel').innerHTML = 'Cops: ' + state.numCops;
     document.getElementById('lobbyDoctorsLabel').innerHTML = 'Doctors: ' + state.numDoctors;
+    document.getElementById('numMafia').value = state.numMafia;
+    document.getElementById('numCops').value = state.numCops;
+    document.getElementById('numDoctors').value = state.numDoctors;
 }

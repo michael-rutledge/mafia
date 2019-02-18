@@ -14,9 +14,26 @@ var playerList = document.getElementById('playerList');
 var leaveButton = document.getElementById('leaveButton');
 var lobbyOptions = document.getElementById('lobbyOptions');
 var hostOptions = document.getElementById('hostOptions');
+var numMafia = document.getElementById('numMafia');
+var numCops = document.getElementById('numCops');
+var numDoctors = document.getElementById('numDoctors');
 
 // state variables
 var savedUserInfo;
+
+
+// helper functions
+function hostSelect(elem) {
+    socket.emit('hostOptionChange', {
+        id: elem.id,
+        value: elem.value
+    });
+}
+
+var clearEntry = () => {
+    entryTextName.value = '';
+    entryTextRoom.value = '';
+};
 
 
 // html element actions
@@ -32,16 +49,9 @@ leaveButton.onclick = () => {
     socket.emit('userAttemptLeave');
 };
 
-
-// utility functions
-var getElem = (id) => {
-    return document.getElementById(id);
-};
-
-var clearEntry = () => {
-    entryTextName.value = '';
-    entryTextRoom.value = '';
-};
+numMafia.onchange = () => { hostSelect(numMafia); };
+numCops.onchange = () => { hostSelect(numCops); };
+numDoctors.onchange = () => { hostSelect(numDoctors); };
 
 
 // socket events

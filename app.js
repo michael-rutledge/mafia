@@ -24,8 +24,6 @@ console.log('Server started.');
 // properties for all sockets
 sio.sockets.on('connection', (socket) => {
     debugLog('socket ' + socket.id + ' connected');
-    debugLog('default rooms: ');
-    debugLog(sio.sockets.adapter.rooms);
 
     socket.emit('clientConnected', {
         socketId: socket.id
@@ -57,6 +55,13 @@ sio.sockets.on('connection', (socket) => {
         if (!data || data.name.length < 1) return;
         data.room = MafiaManager.reserveNewRoom();
         attemptJoin(socket, data);
+    });
+
+    socket.on('hostOptionChange', (data) => {
+        var room = getRoomOfSocket(socket);
+        if (MafiaManager.changeRoomOption(data.id, data.value, room)) {
+            pushStateToClient(room);
+        }
     });
 
     socket.on('userAttemptLeave', () => {

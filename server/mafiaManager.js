@@ -21,6 +21,21 @@ const TOWN_TIME     = 4;
 const SHOWDOWN      = 5;
 const MAFIA_WIN     = 6;
 const TOWN_WIN      = 7;
+// modifiable options and their constraints
+const OPTIONS = {
+    numMafia: {
+        min: 0,
+        max: 3
+    },
+    numCops: {
+        min: 0,
+        max: 2
+    },
+    numDoctors: {
+        min: 0,
+        max: 1
+    }
+};
 
 
 // public functions
@@ -64,6 +79,19 @@ function addUserToRoom(socket, name, room) {
         }
     }
     // all other conditions should lead to a no-go on add user
+    return false;
+}
+
+function changeRoomOption(id, value, room) {
+    // return true if option was successfully modified
+    if (roomExists(room)) {
+        var roomState = getRoomState(room);
+        if (OPTIONS[id]) {
+            roomState[id] = Math.max(value, OPTIONS[id].min);
+            roomState[id] = Math.min(value, OPTIONS[id].max);
+            return true;
+        }
+    }
     return false;
 }
 
@@ -130,6 +158,7 @@ function repickHost(roomState) {
 module.exports.reserveNewRoom = reserveNewRoom;
 module.exports.roomExists = roomExists;
 module.exports.addUserToRoom = addUserToRoom;
+module.exports.changeRoomOption = changeRoomOption;
 module.exports.removeUserFromRoom = removeUserFromRoom;
 module.exports.getRoomState = getRoomState;
 module.exports.touchRoomState = touchRoomState;
