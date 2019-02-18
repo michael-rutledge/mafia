@@ -34,7 +34,8 @@ function genStateMessage(gameState) {
 function setHostAndLobbyOptions(hoptions, loptions, state, curSocket) {
     hoptions.style.display = state.gameState === LOBBY && state.host === curSocket.id ?
         '' : 'none';
-    loptions.style.display = hoptions.style.display === 'none' ? '' : 'none';
+    loptions.style.display = state.gameState === LOBBY &&
+        state.host !== curSocket.id ? '' : 'none';
     document.getElementById('lobbyHostLabel').innerHTML = 'Host: ' + state.socketNames[state.host];
     document.getElementById('lobbyMafiaLabel').innerHTML = 'Mafia: ' + state.numMafia;
     document.getElementById('lobbyCopsLabel').innerHTML = 'Cops: ' + state.numCops;

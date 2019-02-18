@@ -64,6 +64,13 @@ sio.sockets.on('connection', (socket) => {
         }
     });
 
+    socket.on('startGame', () => {
+        var room = getRoomOfSocket(socket);
+        if (MafiaManager.startGame(socket, room)) {
+            pushStateToClient(room);
+        }
+    });
+
     socket.on('userAttemptLeave', () => {
         debugLog('User ' + socket.id + ' attempted leave');
         leaveRoom(socket);
@@ -96,7 +103,6 @@ function pushStateToClient(room) {
     // if room exists, push the update
     if (sio.sockets.adapter.rooms[room]) {
         sio.to(room).emit('pushStateToClient', {
-            // TODO: use room socket list to generate user data
             state: MafiaManager.getRoomState(room)
         });
         console.log(sio.sockets.adapter.rooms[room]);

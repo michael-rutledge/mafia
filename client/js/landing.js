@@ -5,13 +5,10 @@ const socket = io();
 var divEntry = document.getElementById('divEntry');
 var entryTextName = document.getElementById('entryTextName');
 var entryTextRoom = document.getElementById('entryTextRoom');
-var entryButtonJoin = document.getElementById('entryButtonJoin');
-var entryButtonCreate = document.getElementById('entryButtonCreate');
 var divGame = document.getElementById('divGame');
 var roomHeader = document.getElementById('roomHeader');
 var stateMessage = document.getElementById('stateMessage');
 var playerList = document.getElementById('playerList');
-var leaveButton = document.getElementById('leaveButton');
 var lobbyOptions = document.getElementById('lobbyOptions');
 var hostOptions = document.getElementById('hostOptions');
 var numMafia = document.getElementById('numMafia');
@@ -37,21 +34,25 @@ var clearEntry = () => {
 
 
 // html element actions
-entryButtonJoin.onclick = () => {
+document.getElementById('entryButtonJoin').onclick = () => {
     socket.emit('userAttemptJoin', { name: entryTextName.value, room: entryTextRoom.value });
 };
 
-entryButtonCreate.onclick = () => {
+document.getElementById('entryButtonCreate').onclick = () => {
     socket.emit('userAttemptCreate', { name: entryTextName.value });
 };
 
-leaveButton.onclick = () => {
+document.getElementById('leaveButton').onclick = () => {
     socket.emit('userAttemptLeave');
 };
 
 numMafia.onchange = () => { hostSelect(numMafia); };
 numCops.onchange = () => { hostSelect(numCops); };
 numDoctors.onchange = () => { hostSelect(numDoctors); };
+
+document.getElementById('startButton').onclick = () => {
+    socket.emit('startGame');
+};
 
 
 // socket events
