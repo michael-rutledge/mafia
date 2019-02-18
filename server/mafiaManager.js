@@ -13,7 +13,6 @@ const MAFIA     = 1;
 const COP       = 2;
 const DOCTOR    = 3;
 const TOWN      = 4;
-const DEAD      = 5;
 // game states
 const LOBBY         = 0;
 const MAFIA_TIME    = 1;

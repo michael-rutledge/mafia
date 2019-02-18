@@ -74,8 +74,7 @@ socket.on('pushStateToClient', (data) => {
     console.log('playersUpdate');
     playerList.innerHTML = '';
     for (var name in data.state.players) {
-        playerList.innerHTML += genPlayerBanner(name, data.state.players[name],
-            socket, data.state.host);
+        playerList.innerHTML += genPlayerBanner(name, data.state, socket);
     }
     stateMessage.innerHTML = genStateMessage(data.state.gameState);
     setHostAndLobbyOptions(hostOptions, lobbyOptions, data.state, socket);
