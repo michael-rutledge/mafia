@@ -71,6 +71,13 @@ sio.sockets.on('connection', (socket) => {
         }
     });
 
+    socket.on('playerVote', (data) => {
+        var room = getRoomOfSocket(socket);
+        if (MafiaManager.playerVote(socket, data.playerName, room)) {
+            pushStateToClient(room);
+        }
+    });
+
     socket.on('userAttemptLeave', () => {
         debugLog('User ' + socket.id + ' attempted leave');
         leaveRoom(socket);

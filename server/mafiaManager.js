@@ -90,6 +90,20 @@ function changeRoomOption(id, value, room) {
     return false;
 }
 
+function playerVote(socket, name, room) {
+    if (roomExists(room)) {
+        var roomState = getRoomState(room);
+        var voting = roomState.players[roomState.socketNames[socket.id]];
+        var voted = roomState.players[name];
+        if (voteIsLegal(voting, voted, roomState)) {
+            applyVote(voting, voted, roomState);
+            checkRoomState(roomState);
+            return true;
+        }
+    }
+    return false;
+}
+
 function removeUserFromRoom(socket, room) {
     if (roomExists(room)) {
         var roomState = getRoomState(room);
@@ -139,17 +153,38 @@ function startGame(socket, room) {
 
 
 // private utilities
+function applyVote(voting, voted, roomState) {
+    // clear past votes then apply vote
+    var votesKey;
+    switch (voting.role) {
+        case MAFIA:
+            doVoteOrCustomVote(voting, voted, roomState, MAFIA_TIME, 'mafiaVotes');
+            break;
+        case COP:
+            doVoteOrCustomVote(voting, voted, roomState, COP_TIME, 'copVotes');
+            break;
+        case DOCTOR:
+            doVoteOrCustomVote(voting, voted, roomState, DOCTOR_TIME, 'doctorVotes');
+            break;
+        case TOWN:
+            doVoteOrCustomVote(voting, voted, roomState, -1, 'townVotes')
+            break;
+        default:
+            break;
+    }
+}
+
 function assignRoles(numMafia, numCops, numDoctors, players) {
     var names = Object.keys(players);
     names = Shuffler.shuffle(names);
     var curIndex = 0;
-    while (numMafia-- > 0) {
+    while (numMafia-- > 0 && curIndex < names.length) {
         players[names[curIndex++]].role = MAFIA;
     }
-    while (numCops-- > 0) {
+    while (numCops-- > 0 && curIndex < names.length) {
         players[names[curIndex++]].role = COP;
     }
-    while (numDoctors-- > 0) {
+    while (numDoctors-- > 0 && curIndex < names.length) {
         players[names[curIndex++]].role = DOCTOR;
     }
 }
@@ -160,6 +195,64 @@ function checkRoles(roomState) {
     return (playerCount(roomState) - roomState.numMafia) >= 3;
 }
 
+function checkRoomState(roomState) {
+    switch (roomState.gameState) {
+        case MAFIA_TIME:
+            if (stateTriggered(roomState, 'mafiaVotes', roomState.numMafia, 'mafiaTarget',
+                    (player) => { return true; })) {
+                roomState.gameState = COP_TIME;
+                clearAllVotes(roomState);
+                checkRoomState(roomState);
+            }
+            break;
+        case COP_TIME:
+            if (stateTriggered(roomState, 'copVotes', roomState.numCops, 'copResult',
+                    (player) => { return player.role === MAFIA; })) {
+                roomState.gameState = DOCTOR_TIME;
+                clearAllVotes(roomState);
+                checkRoomState(roomState);
+            }
+            break;
+        case DOCTOR_TIME:
+            if (stateTriggered(roomState, 'doctorVotes', roomState.numDoctors, 'doctorTarget',
+                    (player) => { return true; })) {
+                roomState.gameState = TOWN_TIME;
+                clearAllVotes(roomState);
+                checkRoomState(roomState);
+                // TODO: this is the transfer to daytime. check mafia kills here
+            }
+            break;
+        case TOWN_TIME:
+            if (stateTriggered(roomState, 'townVotes', townQuota(roomState), 'alive',
+                    (player) => { return false; })) {
+                // TODO: deal with branching logic because not all games will end after first turn
+                roomState.gameState = isGameFinished(roomState) ? LOBBY : MAFIA_TIME;
+                resetGame(roomState);
+            }
+            break;
+        default:
+            // TODO: showdown checks will need to be here
+            break;
+    }
+}
+
+function clearAllVotes(roomState) {
+    for (var name in roomState.players) {
+        var player = roomState.players[name];
+        for (vote in player.mafiaVotes) delete player.mafiaVotes[vote];
+        for (vote in player.copVotes) delete player.copVotes[vote];
+        for (vote in player.doctorVotes) delete player.doctorVotes[vote];
+        for (vote in player.townVotes) delete player.townVotes[vote];
+    }
+}
+
+function clearVotesFromPlayer(votingName, roomState, votesKey) {
+    for (var name in roomState.players) {
+        if (roomState.players[name][votesKey][votingName])
+            delete roomState.players[name][votesKey][votingName];
+    }
+}
+
 function constructNewPlayer(socketId) {
     return {
         socketId: socketId,
@@ -168,10 +261,10 @@ function constructNewPlayer(socketId) {
         mafiaTarget: false,
         mafiaVotes: {},
         copResult: null,
-        copTarget: false,
         copVotes: {},
         doctorTarget: false,
-        doctorVotes: {}
+        doctorVotes: {},
+        townVotes: {}
     };
 }
 
@@ -182,10 +275,31 @@ function constructNewRoomState(room) {
         numMafia: 1,
         numCops: 0,
         numDoctors: 0,
+        numTown: 0,
         players: {},
         socketNames: {}
     }
     return roomStates[room];
+}
+
+function doVoteOrCustomVote(voting, voted, roomState, customTime, customKey) {
+    // clear past votes from voting
+    var votingName = roomState.socketNames[voting.socketId];
+    var votesKey = roomState.gameState === customTime ? customKey :
+        'townVotes';
+    clearVotesFromPlayer(votingName, roomState, votesKey);
+    // then actually vote
+    voted[votesKey][votingName] = 1;
+}
+
+function isGameFinished(roomState) {
+    // TODO: actually implement this
+    return true;
+}
+
+function playerAliveCount(roomState) {
+    return roomState.numMafia + roomState.numCops + roomState.numDoctors +
+        roomState.numTown;
 }
 
 function playerCount(roomState) {
@@ -194,12 +308,15 @@ function playerCount(roomState) {
 
 function prepNewGame(roomState) {
     // set everyone to alive and innocent as defaults
+    resetGame(roomState);
     for (var name in roomState.players) {
         roomState.players[name].role = TOWN;
         roomState.players[name].alive = true;
     }
     // assign real roles
     assignRoles(roomState.numMafia, roomState.numCops, roomState.numDoctors, roomState.players);
+    roomState.numTown = playerCount(roomState) - roomState.numMafia -
+        roomState.numCops - roomState.numDoctors;
     // set game state out of lobby
     roomState.gameState = MAFIA_TIME;
 }
@@ -210,10 +327,64 @@ function repickHost(roomState) {
     roomState.host = newHostId ? newHostId : null;
 }
 
+function resetGame(roomState) {
+    clearAllVotes(roomState);
+    for (var name in roomState.players) {
+        var player = roomState.players[name];
+        player.role = DEFAULT;
+        player.alive = true;
+    }
+}
+
+function stateTriggered(roomState, voteKey, quota, targetKey, valFunc) {
+    // check vote count for parameters
+    // quota hit means state has been triggered
+    for (var name in roomState.players) {
+        if (Object.keys(roomState.players[name][voteKey]).length >= quota) {
+            roomState.players[name][targetKey] = valFunc(roomState.players[name]);
+            return true;
+        }
+    }
+    return false;
+}
+
+function townQuota(roomState) {
+    return Math.ceil(playerAliveCount(roomState)/2);
+}
+
 function tryForHost(socket, roomState) {
     if (roomState.host === null) {
         roomState.host = socket.id;
     }
+}
+
+function voteIsLegal(voting, voted, roomState) {
+    // this check is mostly to prevent cheating from client
+    // the logic is repeated after being done in client to prevent voting calls
+    if (!voting.alive || !voted.alive) return false;
+    switch (roomState.gameState) {
+        // mafia can vote for anyone, even themselves
+        case MAFIA_TIME:
+            return voting.role === MAFIA;
+            break;
+        // cops can only investigate non-cops who haven't been investigated
+        case COP_TIME:
+            return voting.role === COP && voted.role !== COP &&
+                voted.copResult === null;
+            break;
+        // doctors can only save non-doctors
+        case DOCTOR_TIME:
+            return voting.role === DOCTOR && voted.role !== DOCTOR;
+            break;
+        // during deliberation, everyone can vote on anyone
+        case TOWN_TIME:
+            return true;
+            break;
+        default:
+            return false;
+            break;
+    }
+    return false;
 }
 
 
@@ -223,6 +394,7 @@ module.exports.roomExists = roomExists;
 module.exports.addUserToRoom = addUserToRoom;
 module.exports.changeRoomOption = changeRoomOption;
 module.exports.removeUserFromRoom = removeUserFromRoom;
+module.exports.playerVote = playerVote;
 module.exports.getRoomState = getRoomState;
 module.exports.touchRoomState = touchRoomState;
 module.exports.removeRoom = removeRoom;
