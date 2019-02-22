@@ -218,16 +218,23 @@ function checkRoomState(roomState) {
                     (player) => { return true; })) {
                 roomState.gameState = TOWN_TIME;
                 clearAllVotes(roomState);
-                checkRoomState(roomState);
-                // TODO: this is the transfer to daytime. check mafia kills here
+                transferToDaytime(roomState);
             }
             break;
         case TOWN_TIME:
             if (stateTriggered(roomState, 'townVotes', townQuota(roomState), 'alive',
                     (player) => { return false; })) {
                 // TODO: deal with branching logic because not all games will end after first turn
-                roomState.gameState = isGameFinished(roomState) ? LOBBY : MAFIA_TIME;
-                resetGame(roomState);
+                // also we need to have game over states for results screen
+                // TODO: keep track of role count after death
+                // TODO: determine if showdown is needed here
+                if (isGameFinished(roomState)) {
+                    roomState.gameState = LOBBY;
+                    resetGame(roomState);
+                }
+                else {
+                    roomState.gameState = MAFIA_TIME;
+                }
             }
             break;
         default:
@@ -293,8 +300,18 @@ function doVoteOrCustomVote(voting, voted, roomState, customTime, customKey) {
 }
 
 function isGameFinished(roomState) {
-    // TODO: actually implement this
-    return true;
+    // TODO: return game finish states
+    if (roomState.numMafia <= 0) {
+        return true;
+    }
+    if (innocentCount(roomState) < 2) {
+        return true;
+    }
+    return false;
+}
+
+function innocentCount(roomState) {
+    return playerAliveCount(roomState) - roomState.numMafia;
 }
 
 function playerAliveCount(roomState) {
@@ -333,6 +350,9 @@ function resetGame(roomState) {
         var player = roomState.players[name];
         player.role = DEFAULT;
         player.alive = true;
+        player.mafiaTarget = false;
+        player.copResult = null;
+        player.doctorTarget = false;
     }
 }
 
@@ -341,7 +361,9 @@ function stateTriggered(roomState, voteKey, quota, targetKey, valFunc) {
     // quota hit means state has been triggered
     for (var name in roomState.players) {
         if (Object.keys(roomState.players[name][voteKey]).length >= quota) {
-            roomState.players[name][targetKey] = valFunc(roomState.players[name]);
+            // only set targetKey if people actually voted
+            if (quota > 0)
+                roomState.players[name][targetKey] = valFunc(roomState.players[name]);
             return true;
         }
     }
@@ -350,6 +372,18 @@ function stateTriggered(roomState, voteKey, quota, targetKey, valFunc) {
 
 function townQuota(roomState) {
     return Math.ceil(playerAliveCount(roomState)/2);
+}
+
+function transferToDaytime(roomState) {
+    // for anyone selected by mafia and not saved by the doctor, kill them
+    for (var name in roomState.players) {
+        var player = roomState.players[name];
+        if (player.mafiaTarget && !player.doctorTarget) {
+            player.alive = false;
+        }
+        player.mafiaTarget = false;
+        player.doctorTarget = false;
+    }
 }
 
 function tryForHost(socket, roomState) {
