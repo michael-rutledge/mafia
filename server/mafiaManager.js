@@ -1,42 +1,12 @@
 const Hasher = require('./hasher');
-const Shuffler = require('./shuffler.js');
-
+const RoomState = require('./roomState.js');
+const Player = require('./player.js');
 
 // management and constants
 var roomStates = {};
 const ROOM_CODE_LENGTH = 4;
 const MAX_PLAYERS = 16;
 const MIN_PLAYERS = 4;
-// roles
-const DEFAULT   = 0;
-const MAFIA     = 1;
-const COP       = 2;
-const DOCTOR    = 3;
-const TOWN      = 4;
-// game states
-const LOBBY         = 0;
-const MAFIA_TIME    = 1;
-const COP_TIME      = 2;
-const DOCTOR_TIME   = 3;
-const TOWN_TIME     = 4;
-const SHOWDOWN      = 5;
-const MAFIA_WIN     = 6;
-const TOWN_WIN      = 7;
-// modifiable options and their constraints
-const OPTIONS = {
-    numMafia: {
-        min: 0,
-        max: 3
-    },
-    numCops: {
-        min: 0,
-        max: 2
-    },
-    numDoctors: {
-        min: 0,
-        max: 1
-    }
-};
 
 
 // public functions
@@ -54,43 +24,16 @@ function roomExists(room) {
 }
 
 function addUserToRoom(socket, name, room) {
-    if (roomExists(room)) {
-        var roomState = getRoomState(room);
-        // if player name doesn't exist and we are in lobby, go for add user
-        if (!roomState.players[name] && roomState.gameState === LOBBY) {
-            roomState.players[name] = constructNewPlayer(socket.id);
-            roomState.socketNames[socket.id] = name;
-            tryForHost(socket, roomState);
-            return true;
-        }
-        // if name exists but we are in game, make sure the requested name has an open socket spot
-        // then populate the open socket spot
-        else if (roomState.players[name] && roomState.gameState !== LOBBY &&
-                roomState.players[name].socketId === null) {
-            roomState.players[name].socketId = socket.id;
-            roomState.socketNames[socket.id] = name;
-            tryForHost(socket, roomState);
-            return true;
-        }
-    }
-    // all other conditions should lead to a no-go on add user
-    return false;
+    return roomExists(room) ? getRoomState(room).addUser(socket, name) : false;
 }
 
 function changeRoomOption(id, value, room) {
-    // return true if option was successfully modified
-    if (roomExists(room)) {
-        var roomState = getRoomState(room);
-        if (OPTIONS[id]) {
-            roomState[id] = Math.max(value, OPTIONS[id].min);
-            roomState[id] = Math.min(value, OPTIONS[id].max);
-            return true;
-        }
-    }
-    return false;
+    return roomExists(room) ? getRoomState(room).changeOption(id, value) : false;
 }
 
-function playerVote(socket, name, room) {
+function playerVote(votingSocket, votedName, room) {
+    return roomExists(room) ? getRoomState(room).playerVote(votingSocket, votedName) : false;
+    // TODO: put this stuff below in roomState.js
     if (roomExists(room)) {
         var roomState = getRoomState(room);
         var voting = roomState.players[roomState.socketNames[socket.id]];
@@ -105,20 +48,7 @@ function playerVote(socket, name, room) {
 }
 
 function removeUserFromRoom(socket, room) {
-    if (roomExists(room)) {
-        var roomState = getRoomState(room);
-        var name = roomState.socketNames[socket.id];
-        if (name && roomState.players[name]) {
-            delete roomState.socketNames[socket.id];
-            roomState.players[name].socketId = null;
-            if (roomState.gameState === LOBBY) {
-                delete roomState.players[name];
-            }
-            repickHost(roomState);
-            return true;
-        }
-    }
-    return false;
+    return roomExists(room) ? getRoomState(room).removeUser(socket) : false;
 }
 
 function getRoomState(room) {
@@ -137,18 +67,7 @@ function removeRoom(room) {
 }
 
 function startGame(socket, room) {
-    if (roomExists(room)) {
-        var roomState = getRoomState(room);
-        // safeguard that only the host can start the game and only from lobby
-        if (socket.id === roomState.host && roomState.gameState === LOBBY &&
-                playerCount(roomState) >= MIN_PLAYERS &&
-                checkRoles(roomState)) {
-            prepNewGame(roomState);
-            return true;
-        }
-    }
-    console.log('GAME START FAIL');
-    return false;
+    return roomExists(room) ? getRoomState(room).startGame(socket) : false;
 }
 
 
@@ -172,27 +91,6 @@ function applyVote(voting, voted, roomState) {
         default:
             break;
     }
-}
-
-function assignRoles(numMafia, numCops, numDoctors, players) {
-    var names = Object.keys(players);
-    names = Shuffler.shuffle(names);
-    var curIndex = 0;
-    while (numMafia-- > 0 && curIndex < names.length) {
-        players[names[curIndex++]].role = MAFIA;
-    }
-    while (numCops-- > 0 && curIndex < names.length) {
-        players[names[curIndex++]].role = COP;
-    }
-    while (numDoctors-- > 0 && curIndex < names.length) {
-        players[names[curIndex++]].role = DOCTOR;
-    }
-}
-
-function checkRoles(roomState) {
-    // there needs to be at least 3 innocents
-    // because 2 results in showdown after 1 dies from mafia
-    return (playerCount(roomState) - roomState.numMafia) >= 3;
 }
 
 function checkRoomState(roomState) {
@@ -260,32 +158,8 @@ function clearVotesFromPlayer(votingName, roomState, votesKey) {
     }
 }
 
-function constructNewPlayer(socketId) {
-    return {
-        socketId: socketId,
-        role: DEFAULT,
-        alive: true,
-        mafiaTarget: false,
-        mafiaVotes: {},
-        copResult: null,
-        copVotes: {},
-        doctorTarget: false,
-        doctorVotes: {},
-        townVotes: {}
-    };
-}
-
 function constructNewRoomState(room) {
-    roomStates[room] = {
-        gameState: LOBBY,
-        host: null,
-        numMafia: 1,
-        numCops: 0,
-        numDoctors: 0,
-        numTown: 0,
-        players: {},
-        socketNames: {}
-    }
+    roomStates[room] = new RoomState();
     return roomStates[room];
 }
 
@@ -323,39 +197,6 @@ function playerCount(roomState) {
     return Object.keys(roomState.players).length;
 }
 
-function prepNewGame(roomState) {
-    // set everyone to alive and innocent as defaults
-    resetGame(roomState);
-    for (var name in roomState.players) {
-        roomState.players[name].role = TOWN;
-        roomState.players[name].alive = true;
-    }
-    // assign real roles
-    assignRoles(roomState.numMafia, roomState.numCops, roomState.numDoctors, roomState.players);
-    roomState.numTown = playerCount(roomState) - roomState.numMafia -
-        roomState.numCops - roomState.numDoctors;
-    // set game state out of lobby
-    roomState.gameState = MAFIA_TIME;
-}
-
-function repickHost(roomState) {
-    roomState.host = null;
-    newHostId = Object.keys(roomState.socketNames)[0];
-    roomState.host = newHostId ? newHostId : null;
-}
-
-function resetGame(roomState) {
-    clearAllVotes(roomState);
-    for (var name in roomState.players) {
-        var player = roomState.players[name];
-        player.role = DEFAULT;
-        player.alive = true;
-        player.mafiaTarget = false;
-        player.copResult = null;
-        player.doctorTarget = false;
-    }
-}
-
 function stateTriggered(roomState, voteKey, quota, targetKey, valFunc) {
     // check vote count for parameters
     // quota hit means state has been triggered
@@ -384,41 +225,6 @@ function transferToDaytime(roomState) {
         player.mafiaTarget = false;
         player.doctorTarget = false;
     }
-}
-
-function tryForHost(socket, roomState) {
-    if (roomState.host === null) {
-        roomState.host = socket.id;
-    }
-}
-
-function voteIsLegal(voting, voted, roomState) {
-    // this check is mostly to prevent cheating from client
-    // the logic is repeated after being done in client to prevent voting calls
-    if (!voting.alive || !voted.alive) return false;
-    switch (roomState.gameState) {
-        // mafia can vote for anyone, even themselves
-        case MAFIA_TIME:
-            return voting.role === MAFIA;
-            break;
-        // cops can only investigate non-cops who haven't been investigated
-        case COP_TIME:
-            return voting.role === COP && voted.role !== COP &&
-                voted.copResult === null;
-            break;
-        // doctors can only save non-doctors
-        case DOCTOR_TIME:
-            return voting.role === DOCTOR && voted.role !== DOCTOR;
-            break;
-        // during deliberation, everyone can vote on anyone
-        case TOWN_TIME:
-            return true;
-            break;
-        default:
-            return false;
-            break;
-    }
-    return false;
 }
 
 

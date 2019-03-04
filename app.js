@@ -109,9 +109,11 @@ function leaveRoom(socket) {
 function pushStateToClient(room) {
     // if room exists, push the update
     if (sio.sockets.adapter.rooms[room]) {
-        sio.to(room).emit('pushStateToClient', {
-            state: MafiaManager.getRoomState(room)
-        });
+        for (var s in sio.sockets.adapter.rooms[room].sockets) {
+            sio.to(s).emit('pushStateToClient', {
+                state: MafiaManager.getRoomState(room)
+            });
+        }
         console.log(sio.sockets.adapter.rooms[room]);
         debugLog('Players left in ' + room + ': ' + sio.sockets.adapter.rooms[room].length);
     }
