@@ -1,3 +1,5 @@
+const ClientState = require('./clientState.js');
+
 // roles
 const DEFAULT   = 0;
 const MAFIA     = 1;
@@ -13,6 +15,7 @@ class Player {
     */
     constructor(socketId) {
         this.socketId = socketId;
+        this.clientState = new ClientState(this);
         this.toDefault();
     }
 
@@ -55,6 +58,13 @@ class Player {
     */
     clearPlayerVotes(name) {
         
+    }
+
+    /*
+    * updates what state players see from the current room state depending on role
+    */
+    updateClientStateFromRoomState(roomState) {
+        this.clientState.updateFromRoomState(roomState);
     }
 }
 

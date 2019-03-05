@@ -74,20 +74,19 @@ socket.on('leaveSuccess', () => {
     divGame.style.display = "none";
 });
 
-socket.on('pushStateToClient', (data) => {
-    console.log('playersUpdate');
-    playerList.innerHTML = '';
-    for (var name in data.state.players) {
-        playerList.innerHTML += getPlayerBanner(name, data.state, socket);
-    }
-    setRoleHeader(data.state, socket);
-    stateMessage.innerHTML = getStateMessage(data.state, socket);
-    setHostAndLobbyOptions(hostOptions, lobbyOptions, data.state, socket);
-    setLeaveButtonVisible(data.state);
-    // TODO: save user info here
+socket.on('pushStateToClient', (roomState) => {
+    console.log('pushStateToClient');
     // TODO: make sure not to print this in final product, as it would give game away
     console.log('STATE INCOMING');
-    console.log(data.state);
+    console.log(roomState);
+    playerList.innerHTML = '';
+    for (var name in roomState.clientState.players) {
+        playerList.innerHTML += getPlayerBanner(roomState.clientState.players[name]);
+    }
+    setRoleHeader(roomState);
+    stateMessage.innerHTML = getStateMessage(roomState, socket);
+    setHostAndLobbyOptions(hostOptions, lobbyOptions, roomState, socket);
+    setLeaveButtonVisible(roomState);
 });
 
 socket.on('reconnect', () => {

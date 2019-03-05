@@ -66,12 +66,12 @@ class RoomState {
         if (!this.playerExists(name) && this.gameState === LOBBY) {
             this.players[name] = new Player(socket.id);
             this.linkSocketToPlayer(socket, name);
-            return true;
+            return this.clientsUpdate();
         }
         else if (this.playerExists(name) && this.gameState !== LOBBY &&
                 this.playerIsEmpty(name)) {
             this.linkSocketToPlayer(socket, name);
-            return true;
+            return this.clientsUpdate();
         }
         return false;
     }
@@ -84,7 +84,7 @@ class RoomState {
         if (OPTIONS[id]) {
             this[id] = Math.max(value, OPTIONS[id].min);
             this[id] = Math.min(value, OPTIONS[id].max);
-            return true;
+            return this.clientsUpdate();
         }
         return false;
     }
@@ -116,7 +116,7 @@ class RoomState {
                 delete this.players[name];
             }
             this.repickHost();
-            return true;
+            return this.clientsUpdate();
         }
         return false;
     }
@@ -126,7 +126,7 @@ class RoomState {
         if (this.socketIsHost(socket) && this.gameState === LOBBY &&
                 this.rolesOkayForStart()) {
             this.prepAndStartNewGame();
-            return true;
+            return this.clientsUpdate();
         }
         return false;
     }
@@ -150,6 +150,19 @@ class RoomState {
             this.players[names[curIndex++]].role = Player.DOCTOR;
         }
     }
+
+    /*
+    * Updates client state for each player.
+    * To be used on each public function used by mafiaManager as the final touch
+    * in a state update.
+    */
+    clientsUpdate() {
+        for (var name in this.players) {
+            this.getPlayerFromName(name).updateClientStateFromRoomState(this);
+        }
+        return true;
+    }
+
     /*
     * get the player name linked to given socket
     */
@@ -227,8 +240,9 @@ class RoomState {
     */
     resetPlayers(role = Player.DEFAULT) {
         for (var name in this.players) {
-            this.players[name].toDefault();
-            this.players[name].role = role;
+            var player = this.getPlayerFromName(name);
+            player.toDefault();
+            player.role = role;
         }
     }
 

@@ -107,14 +107,21 @@ function leaveRoom(socket) {
 }
 
 function pushStateToClient(room) {
-    // if room exists, push the update
+    // if room exists, push the update to each client individually using client state
     if (sio.sockets.adapter.rooms[room]) {
+        var roomState = MafiaManager.getRoomState(room);
+        console.log(sio.sockets.adapter.rooms[room]);
         for (var s in sio.sockets.adapter.rooms[room].sockets) {
+            console.log('player from socket: ' + s);
             sio.to(s).emit('pushStateToClient', {
-                state: MafiaManager.getRoomState(room)
+                gameState: roomState.gameState,
+                host: roomState.socketNames[roomState.host],
+                numMafia: roomState.numMafia,
+                numCops: roomState.numCops,
+                numDoctors: roomState.numDoctors,
+                clientState: roomState.players[roomState.socketNames[s]].clientState.getCompressed()
             });
         }
-        console.log(sio.sockets.adapter.rooms[room]);
         debugLog('Players left in ' + room + ': ' + sio.sockets.adapter.rooms[room].length);
     }
     else {
