@@ -95,7 +95,7 @@ class RoomState {
     playerVote(votingSocket, votedName) {
         var votingPlayer = this.getPlayerFromSocket(votingSocket);
         var votedPlayer = this.getPlayerFromName(votedName);
-        console.log('vote from role: ' + Player.MAFIA);
+        console.log('vote for: ' + votedName);
         if (this.playerVoteLegal(votingPlayer, votedPlayer)) {
             // TODO: remake vote logic in this file
             console.log('THATS A GOOD VOTE');

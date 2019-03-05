@@ -115,7 +115,10 @@ function pushStateToClient(room) {
             console.log('player from socket: ' + s);
             sio.to(s).emit('pushStateToClient', {
                 gameState: roomState.gameState,
-                host: roomState.socketNames[roomState.host],
+                host: {
+                    name: roomState.socketNames[roomState.host],
+                    socket: roomState.host
+                },
                 numMafia: roomState.numMafia,
                 numCops: roomState.numCops,
                 numDoctors: roomState.numDoctors,

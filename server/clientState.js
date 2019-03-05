@@ -15,8 +15,19 @@ const ROLE_CLASSES = [
     'bannerDoctor',
     'bannerTown'
 ];
+const STATE_MESSAGES= [
+    'Welcome to the lobby. Once enough players join, the host can start the game.',
+    'Mafia, please choose your victim.',
+    'Detective, please choose your suspect to investigate.',
+    'Doctor, please choose who you would like to save.',
+    'It is now daytime. Everyone, please deliberate and vote who to kill off.',
+    'There are only two innocents left. We need a handshake to settle this...',
+    'Game over. Vote on whether to play again or go to the lobby.'
+];
+const NIGHT_MESSAGE = 'You are currently asleep. But there are others out and about...';
 const CLICK_FUNC = 'playerVote';
 const DEAD_CLASS = 'bannerDead';
+const VOTE_CLASS = 'bannerVotable';
 
 /*
 * ClientState: represents need-to-know information per player on the clientside
@@ -26,33 +37,49 @@ class ClientState {
     // CONSTRUCTOR
     constructor(clientPlayer) {
         this.clientPlayer = clientPlayer;
-        this.playerCards = {};
+        this.message = STATE_MESSAGES[0];
+        this.clearPlayerCards();
     }
 
 
     // PUBLIC FUNCTIONS
+    /*
+    * updates clientState and player cards depending on room state
+    */
     updateFromRoomState(roomState) {
+        this.clearPlayerCards();
         for (var pName in roomState.players) {
+            // get player and make fresh player cards
             var curPlayer = roomState.getPlayerFromName(pName);
-            var curCard;
-            if (!this.playerCards[pName]) this.playerCards[pName] = new PlayerCard(pName);
-            curCard = this.playerCards[pName];
-            this.clearCard(curCard);
+            this.playerCards[pName] = new PlayerCard(pName);
+            var curCard = this.playerCards[pName];
+            this.clearPlayerCard(curCard);
+            // set background role color
             curCard.addDivClass(this.playerRoleVisible(curPlayer) ?
                 ROLE_CLASSES[curPlayer.role] : ROLE_CLASSES[0]);
+            // set alive opacity
             if (!curPlayer.alive) {
                 curCard.addDivClass(DEAD_CLASS);
             }
+            // set vote hover
             if (roomState.playerVoteLegal(this.clientPlayer, curPlayer)) {
-                curCard.addOnClick(this.getClickFuncString(curPlayer));
+                curCard.addOnClick(this.getClickFuncString(pName));
+                curCard.addDivClass(VOTE_CLASS);
             }
             // TODO: check for host or people who are disconnected, also cop stuff
         }
+        this.message = roomState.gameState === this.clientPlayer.role ?
+            STATE_MESSAGES[this.clientPlayer.role] : NIGHT_MESSAGE;
     }
 
+    /*
+    * to avoid buffer overflow and circular references, only return necessary info
+    * back to client
+    */
     getCompressed() {
         return {
-            alive: this.clientPlayer.alive
+            alive: this.clientPlayer.alive,
+            message: this.message,
             role: ROLE_STRINGS[this.clientPlayer.role],
             players: this.playerCards
         };
@@ -63,23 +90,29 @@ class ClientState {
     /*
     * clears the div classes of a player card to be set again according to room state
     */
-    clearCard(card) {
+    clearPlayerCard(card) {
         card.clearDivClasses();
         card.clearOnClick();
+    }
+
+    clearPlayerCards() {
+        this.playerCards = {};
     }
 
     /*
     * generates the string of the to-be-evaluated function for on click
     */
-    getClickFuncString(player) {
-        return CLICK_FUNC + '(' + player.name + ')';
+    getClickFuncString(playerName) {
+        return CLICK_FUNC + '(\'' + playerName + '\')';
     }
 
     /*
     * returns whether the given player's role can be seen by the client player
     */
     playerRoleVisible(player) {
-        return !this.clientPlayer.alive || this.clientPlayer.role === player.role;
+        // TODO: we need methods from player declaring booleans for roles
+        return !this.clientPlayer.alive || this.clientPlayer === player ||
+            (this.clientPlayer.role === player.role && this.clientPlayer.role !== 4);
     }
 }
 

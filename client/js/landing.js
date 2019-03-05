@@ -84,7 +84,7 @@ socket.on('pushStateToClient', (roomState) => {
         playerList.innerHTML += getPlayerBanner(roomState.clientState.players[name]);
     }
     setRoleHeader(roomState);
-    stateMessage.innerHTML = getStateMessage(roomState, socket);
+    stateMessage.innerHTML = roomState.clientState.message;
     setHostAndLobbyOptions(hostOptions, lobbyOptions, roomState, socket);
     setLeaveButtonVisible(roomState);
 });
