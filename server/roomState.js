@@ -212,7 +212,8 @@ class RoomState {
     * get the quota necessary to advance a voting gameState
     */
     getVoteQuotaForGameState(gs) {
-        var quotas = [ 0, this.numMafia, this.numCops, this.numDoctors, this.numTown/2 ];
+        var quotas = [ 0, this.numMafia, this.numCops, this.numDoctors,
+            Math.ceil(this.numTown/2) ];
         return quotas[gs];
     }
 
