@@ -68,8 +68,11 @@ class ClientState {
             }
             // TODO: check for host or people who are disconnected, also cop stuff
         }
-        this.message = roomState.gameState === this.clientPlayer.role ?
-            STATE_MESSAGES[this.clientPlayer.role] : NIGHT_MESSAGE;
+        // set message and overwrite for special cases
+        this.message = roomState.gameState === this.clientPlayer.role || !this.clientPlayer.alive ?
+            STATE_MESSAGES[roomState.gameState] : NIGHT_MESSAGE;
+        // TODO: get rid of magic numbers denoting town
+        this.message = roomState.gameState === 4 ? STATE_MESSAGES[4] : this.message;
     }
 
     /*

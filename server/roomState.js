@@ -97,8 +97,14 @@ class RoomState {
         var votedPlayer = this.getPlayerFromName(votedName);
         console.log('vote for: ' + votedName);
         if (this.playerVoteLegal(votingPlayer, votedPlayer)) {
-            // TODO: remake vote logic in this file
             console.log('THATS A GOOD VOTE');
+            this.tallyVote(votingPlayer, votedPlayer, this.gameState);
+            while (this.gameState !== SHOWDOWN &&
+                    this.voteQuotaReached(votedPlayer, this.gameState)) {
+                this.stepVotingState(votedPlayer, this.gameState);
+            }
+            // TODO: check for showdown and winning here
+            return this.clientsUpdate();
         }
         return false;
     }
@@ -152,6 +158,20 @@ class RoomState {
     }
 
     /*
+    * clear past votes from the given player
+    */
+    clearVotesFromPlayer(votingPlayer) {
+        var votingName = this.getNameFromPlayer(votingPlayer);
+        for (var name in this.players) {
+            var player = this.players[name];
+            delete player.mafiaVotes[votingName];
+            delete player.copVotes[votingName];
+            delete player.doctorVotes[votingName];
+            delete player.townVotes[votingName];
+        }
+    }
+
+    /*
     * Updates client state for each player.
     * To be used on each public function used by mafiaManager as the final touch
     * in a state update.
@@ -161,6 +181,13 @@ class RoomState {
             this.getPlayerFromName(name).updateClientStateFromRoomState(this);
         }
         return true;
+    }
+
+    /*
+    * get name linked to player object
+    */
+    getNameFromPlayer(player) {
+        return this.socketNames[player.socketId];
     }
 
     /*
@@ -179,6 +206,14 @@ class RoomState {
     */
     getPlayerFromSocket(socket) {
         return this.players[this.getNameFromSocket(socket)];
+    }
+
+    /*
+    * get the quota necessary to advance a voting gameState
+    */
+    getVoteQuotaForGameState(gs) {
+        var quotas = [ 0, this.numMafia, this.numCops, this.numDoctors, this.numTown/2 ];
+        return quotas[gs];
     }
 
     /*
@@ -230,8 +265,7 @@ class RoomState {
     prepAndStartNewGame() {
         this.resetPlayers(Player.TOWN);
         this.assignRoles(this.numMafia, this.numCops, this.numDoctors);
-        this.numTown = this.playerCount() - this.numMafia - this.numCops -
-            this.numDoctors;
+        this.numTown = this.playerCount() - this.numMafia - this.numCops - this.numDoctors;
         this.gameState = MAFIA_TIME;
     }
 
@@ -255,8 +289,6 @@ class RoomState {
         return pc >= MIN_PLAYERS && (pc - this.numMafia) > SHOWDOWN_NUM;
     }
 
-    socketIsHost(socket) { return socket.id === this.host; }
-
     /*
     * pick a new host from the remaining players
     */
@@ -264,6 +296,38 @@ class RoomState {
         this.host = null;
         var newHostId = Object.keys(this.socketNames)[0];
         this.host = newHostId ? newHostId : null;
+    }
+
+    socketIsHost(socket) { return socket.id === this.host; }
+
+    /*
+    * steps the gameState after voting; must also skip unnecessary states gracefully
+    */
+    stepVotingState(votedPlayer, gs) {
+        if (votedPlayer.voteCountInGameState(gs) > 0) {
+            // TODO: different voting rounds call for different actions than killing
+            votedPlayer.alive = false;
+            votedPlayer.clearAllVotes();
+        }
+        // votes should only pass game through voting stages, MAFIA is first, TOWN is last
+        this.gameState = (gs % TOWN_TIME) + MAFIA_TIME;
+    }
+
+    /*
+    * physically tally a vote against votedPlayer from votingPlayer during the
+    * given gameState
+    */
+    tallyVote(votingPlayer, votedPlayer, gs) {
+        this.clearVotesFromPlayer(votingPlayer);
+        votedPlayer.tallyVoteFromPlayer(this.getNameFromPlayer(votingPlayer), gs);
+    }
+
+    /*
+    * determine if for the given gameState, enough votes have been received
+    * by given player to step game
+    */
+    voteQuotaReached(votedPlayer, gs) {
+        return votedPlayer.voteCountInGameState(gs) >= this.getVoteQuotaForGameState(gs);
     }
 
 }

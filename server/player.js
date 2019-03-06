@@ -6,6 +6,8 @@ const MAFIA     = 1;
 const COP       = 2;
 const DOCTOR    = 3;
 const TOWN      = 4;
+//indexers
+const VOTE_KEYS = ['mafiaVotes', 'copVotes', 'doctorVotes', 'townVotes'];
 
 class Player {
 
@@ -54,10 +56,17 @@ class Player {
     }
 
     /*
-    * TO IMPLEMENT
+    * get count of votes assigned to this player in current gamestate
     */
-    clearPlayerVotes(name) {
-        
+    voteCountInGameState(gameState) {
+        return Object.keys(this[VOTE_KEYS[gameState-1]]).length;
+    }
+
+    /*
+    * tally vote against this player from voting player name
+    */
+    tallyVoteFromPlayer(votingName, gameState) {
+        this[VOTE_KEYS[gameState-1]][votingName] = 1;
     }
 
     /*
