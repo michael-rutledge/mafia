@@ -140,6 +140,18 @@ class RoomState {
 
     // PRIVATE FUNCTIONS
     /*
+    * to be called during transition to TOWN_TIME; applies Mafia vote according to rules
+    */
+    applyMafiaVote() {
+        for (var name in this.players) {
+            var player = this.players[name];
+            if (player.mafiaTarget) {
+                player.alive = player.doctorTarget;
+            }
+        }
+    }
+
+    /*
     * given the amount of each role, assign to players randomly
     */
     assignRoles(nm, nc, nd) {
@@ -154,6 +166,17 @@ class RoomState {
         }
         while (nd-- > 0 && curIndex < names.length) {
             this.players[names[curIndex++]].role = Player.DOCTOR;
+        }
+    }
+
+    /*
+    * clears all votes in game and does away with target values; cop result stays
+    */
+    clearAllVotesAndResetTargets() {
+        for (var name in this.players[name]) {
+            var player = this.players[name];
+            player.clearAllVotes();
+            player.resetTargets();
         }
     }
 
@@ -266,7 +289,7 @@ class RoomState {
     prepAndStartNewGame() {
         this.resetPlayers(Player.TOWN);
         this.assignRoles(this.numMafia, this.numCops, this.numDoctors);
-        this.numTown = this.playerCount() - this.numMafia - this.numCops - this.numDoctors;
+        this.updateRoleCounts();
         this.gameState = MAFIA_TIME;
     }
 
@@ -305,13 +328,19 @@ class RoomState {
     * steps the gameState after voting; must also skip unnecessary states gracefully
     */
     stepVotingState(votedPlayer, gs) {
+        // only apply vote effect if there are actually votes (ie the round was not skipped)
         if (votedPlayer.voteCountInGameState(gs) > 0) {
-            // TODO: different voting rounds call for different actions than killing
-            votedPlayer.alive = false;
+            votedPlayer.finalizeVoted(gs);
             votedPlayer.clearAllVotes();
         }
         // votes should only pass game through voting stages, MAFIA is first, TOWN is last
         this.gameState = (gs % TOWN_TIME) + MAFIA_TIME;
+        // transition to TOWN_TIME should should apply mafia votes
+        if (this.gameState === TOWN_TIME) {
+            this.applyMafiaVote();
+            this.clearAllVotesAndResetTargets();
+        }
+        this.updateRoleCounts();
     }
 
     /*
@@ -321,6 +350,22 @@ class RoomState {
     tallyVote(votingPlayer, votedPlayer, gs) {
         this.clearVotesFromPlayer(votingPlayer);
         votedPlayer.tallyVoteFromPlayer(this.getNameFromPlayer(votingPlayer), gs);
+    }
+
+    /*
+    * updates this room state's alive population variables
+    */
+    updateRoleCounts() {
+        this.numMafia = this.numCops = this.numDoctors = this.numTown = 0;
+        var roleCounts = [ 0, 0, 0, 0 ];
+        for (var name in this.players) {
+            var player = this.players[name];
+            roleCounts[player.role-1] += player.alive ? 1 : 0;
+        }
+        this.numMafia = roleCounts[Player.MAFIA-1];
+        this.numCops = roleCounts[Player.COP-1];
+        this.numDoctors = roleCounts[Player.DOCTOR-1];
+        this.numTown = roleCounts[Player.TOWN-1];
     }
 
     /*

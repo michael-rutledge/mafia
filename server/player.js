@@ -7,7 +7,14 @@ const COP       = 2;
 const DOCTOR    = 3;
 const TOWN      = 4;
 //indexers
-const VOTE_KEYS = ['mafiaVotes', 'copVotes', 'doctorVotes', 'townVotes'];
+const VOTE_KEYS = [ 'mafiaVotes', 'copVotes', 'doctorVotes', 'townVotes' ];
+const TARGET_KEYS = [ 'mafiaTarget', 'copResult', 'doctorTarget', 'alive' ];
+const TARGET_VAL_FUNCS = [
+    (player) => { return true },
+    (player) => { return player.role === MAFIA },
+    (player) => { return true },
+    (player) => { return false }
+];
 
 class Player {
 
@@ -56,10 +63,18 @@ class Player {
     }
 
     /*
-    * get count of votes assigned to this player in current gamestate
+    * finalize a vote on this player by setting the appropriate values
     */
-    voteCountInGameState(gameState) {
-        return Object.keys(this[VOTE_KEYS[gameState-1]]).length;
+    finalizeVoted(gameState) {
+        this[TARGET_KEYS[gameState-1]] = TARGET_VAL_FUNCS[gameState-1](this);
+    }
+
+    /*
+    * to be called after transition to TOWN_TIME
+    */
+    resetTargets() {
+        this.mafiaTarget = false;
+        this.doctorTarget = false;
     }
 
     /*
@@ -74,6 +89,13 @@ class Player {
     */
     updateClientStateFromRoomState(roomState) {
         this.clientState.updateFromRoomState(roomState);
+    }
+
+    /*
+    * get count of votes assigned to this player in current gamestate
+    */
+    voteCountInGameState(gameState) {
+        return Object.keys(this[VOTE_KEYS[gameState-1]]).length;
     }
 }
 
