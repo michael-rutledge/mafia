@@ -11,6 +11,7 @@ const sanitizeHtml = require('sanitize-html');
 const MafiaManager = require('./server/mafiaManager');
 
 // constants and vars
+const MAX_NAME_LEN = 20;
 const DEBUG = true
 
 app.get('/', (req, res) => {
@@ -31,7 +32,6 @@ sio.sockets.on('connection', (socket) => {
 
     socket.on('userAttemptJoin', (data) => {
         debugLog('User ' + socket.id + ' attempted join');
-        // TODO: handle people fucking with maxlength in input
         data.name = getSanitizedString(data.name);
         data.room = getSanitizedString(data.room);
         if (!data || data.name.length < 1 || data.room.length < 1) return;
@@ -51,7 +51,6 @@ sio.sockets.on('connection', (socket) => {
 
     socket.on('userAttemptCreate', (data) => {
         data.name = getSanitizedString(data.name);
-        // TODO: clean up the input check logic
         if (!data || data.name.length < 1) return;
         data.room = MafiaManager.reserveNewRoom();
         attemptJoin(socket, data);
@@ -157,7 +156,7 @@ function getRoomOfSocket(socket) {
 function getSanitizedString(dirty) {
     return sanitizeHtml(dirty, {
         allowedTags: [],
-    });
+    }).substring(0, MAX_NAME_LEN);
 }
 
 function debugLog(msg) {
