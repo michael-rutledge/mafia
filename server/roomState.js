@@ -99,11 +99,16 @@ class RoomState {
         if (this.playerVoteLegal(votingPlayer, votedPlayer)) {
             console.log('THATS A GOOD VOTE');
             this.tallyVote(votingPlayer, votedPlayer, this.gameState);
-            while (this.gameState !== SHOWDOWN &&
+            // voting handling during normal rounds
+            while (this.gameState <= SHOWDOWN &&
                     this.voteQuotaReached(votedPlayer, this.gameState)) {
                 this.stepVotingState(votedPlayer, this.gameState);
             }
-            // TODO: check for showdown and winning here
+            // voting handling during showdown
+            if (this.gameState === SHOWDOWN) {
+                this.stepShowdown(votingPlayer, votedPlayer);
+            }
+            this.checkForWin();
             return this.clientsUpdate();
         }
         return false;
@@ -170,6 +175,14 @@ class RoomState {
     }
 
     /*
+    * do a simple check of who's alive to declare win state if necessary
+    */
+    checkForWin() {
+        if (this.numMafia <= 0) { this.gameState = TOWN_WIN; }
+        if (this.getInnocentPlayerCount() <= 0) { this.gameState = MAFIA_WIN; }
+    }
+
+    /*
     * clears all votes in game and does away with target values; cop result stays
     */
     clearAllVotesAndResetTargets() {
@@ -207,6 +220,13 @@ class RoomState {
     }
 
     /*
+    * get amount of innocent players left
+    */
+    getInnocentPlayerCount() {
+        return this.numCops + this.numDoctors + this.numTown;
+    }
+
+    /*
     * get name linked to player object
     */
     getNameFromPlayer(player) {
@@ -236,7 +256,7 @@ class RoomState {
     */
     getVoteQuotaForGameState(gs) {
         var quotas = [ 0, this.numMafia, this.numCops, this.numDoctors,
-            Math.ceil(this.numTown/2) ];
+            Math.ceil((this.numTown+1)/2), this.playerCount()+1 ];
         return quotas[gs];
     }
 
@@ -259,9 +279,10 @@ class RoomState {
     playerVoteLegal(voting, voted) {
         if (!voting.alive || !voted.alive) return false;
         switch (this.gameState) {
-            // mafia can vote for anyone, even themselves
+            // mafia can vote for anyone, even themselves (unless they are the only one left)
             case MAFIA_TIME:
-                return voting.role === Player.MAFIA;
+                return voting.role === Player.MAFIA && (this.numMafia > 1 ? true
+                    : voting !== voted);
                 break;
             // cops can only investigate non-cops who haven't been investigated
             case COP_TIME:
@@ -275,6 +296,11 @@ class RoomState {
             // during deliberation, everyone can vote on anyone
             case TOWN_TIME:
                 return true;
+                break;
+            // during showdown, you cannot shake with yourself
+            case SHOWDOWN:
+                return voting !== voted && (voting.role !== Player.MAFIA ||
+                    voted.role !== Player.MAFIA);
                 break;
             default:
                 return false;
@@ -325,6 +351,21 @@ class RoomState {
     socketIsHost(socket) { return socket.id === this.host; }
 
     /*
+    * handles voting during the showdown state
+    */
+    stepShowdown(votingPlayer, votedPlayer) {
+        // check for handshake completion
+        if (votingPlayer.showdownVotes[this.getNameFromPlayer(votedPlayer)]) {
+            if (votingPlayer.role === Player.MAFIA || votedPlayer.role === Player.MAFIA) {
+                this.gameState = MAFIA_WIN;
+            }
+            else {
+                this.gameState = TOWN_WIN;
+            }
+        }
+    }
+
+    /*
     * steps the gameState after voting; must also skip unnecessary states gracefully
     */
     stepVotingState(votedPlayer, gs) {
@@ -341,6 +382,10 @@ class RoomState {
             this.clearAllVotesAndResetTargets();
         }
         this.updateRoleCounts();
+        // if two innocents left, it's time for a showdown
+        if (this.getInnocentPlayerCount() <= 2) {
+            this.gameState = SHOWDOWN;
+        }
     }
 
     /*

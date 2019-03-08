@@ -7,13 +7,14 @@ const COP       = 2;
 const DOCTOR    = 3;
 const TOWN      = 4;
 //indexers
-const VOTE_KEYS = [ 'mafiaVotes', 'copVotes', 'doctorVotes', 'townVotes' ];
+const VOTE_KEYS = [ 'mafiaVotes', 'copVotes', 'doctorVotes', 'townVotes', 'showdownVotes' ];
 const TARGET_KEYS = [ 'mafiaTarget', 'copResult', 'doctorTarget', 'alive' ];
 const TARGET_VAL_FUNCS = [
     (player) => { return true },
     (player) => { return player.role === MAFIA },
     (player) => { return true },
     (player) => { return false }
+    /* showdown doesn't have value to set */
 ];
 
 class Player {
@@ -50,6 +51,7 @@ class Player {
         this.doctorTarget = false;
         this.doctorVotes = {};
         this.townVotes = {};
+        this.showdownVotes = {};
     }
 
     /*
@@ -60,6 +62,7 @@ class Player {
         this.copVotes = {};
         this.doctorVotes = {};
         this.townVotes = {};
+        this.showdownVotes = {};
     }
 
     /*

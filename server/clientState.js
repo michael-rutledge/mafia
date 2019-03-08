@@ -22,6 +22,8 @@ const STATE_MESSAGES= [
     'Doctor, please choose who you would like to save.',
     'It is now daytime. Everyone, please deliberate and vote who to kill off.',
     'There are only two innocents left. We need a handshake to settle this...',
+    'THE MAFIA WIN!',
+    'THE TOWN WIN!',
     'Game over. Vote on whether to play again or go to the lobby.'
 ];
 const NIGHT_MESSAGE = 'You are currently asleep. But there are others out and about...';
@@ -69,9 +71,11 @@ class ClientState {
             // TODO: check for host or people who are disconnected, also cop stuff
         }
         // set message and overwrite for special cases
-        this.message = roomState.gameState === this.clientPlayer.role || !this.clientPlayer.alive ?
+        this.message = roomState.gameState === this.clientPlayer.role ||
+                !this.clientPlayer.alive ||
+                roomState.gameState >= 5 ?
             STATE_MESSAGES[roomState.gameState] : NIGHT_MESSAGE;
-        // TODO: get rid of magic numbers denoting town
+        // TODO: get rid of magic numbers
         this.message = roomState.gameState === 4 ? STATE_MESSAGES[4] : this.message;
     }
 
