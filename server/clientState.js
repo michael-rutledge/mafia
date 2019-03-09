@@ -8,13 +8,6 @@ const ROLE_STRINGS = [
     'Doctor',
     'Town'
 ];
-const ROLE_CLASSES = [
-    'bannerDefault',
-    'bannerMafia',
-    'bannerCop',
-    'bannerDoctor',
-    'bannerTown'
-];
 const STATE_MESSAGES= [
     'Welcome to the lobby. Once enough players join, the host can start the game.',
     'Mafia, please choose your victim.',
@@ -27,9 +20,6 @@ const STATE_MESSAGES= [
     'Game over. Vote on whether to play again or go to the lobby.'
 ];
 const NIGHT_MESSAGE = 'You are currently asleep. But there are others out and about...';
-const CLICK_FUNC = 'playerVote';
-const DEAD_CLASS = 'bannerDead';
-const VOTE_CLASS = 'bannerVotable';
 
 /*
 * ClientState: represents need-to-know information per player on the clientside
@@ -56,23 +46,11 @@ class ClientState {
             this.playerCards[pName] = new PlayerCard(pName);
             var curCard = this.playerCards[pName];
             this.clearPlayerCard(curCard);
-            // set background role color
-            curCard.addDivClass(this.playerRoleVisible(curPlayer) ?
-                ROLE_CLASSES[curPlayer.role] : ROLE_CLASSES[0]);
-            // set alive opacity
-            if (!curPlayer.alive) {
-                curCard.addDivClass(DEAD_CLASS);
-            }
-            // set vote hover
-            if (roomState.playerVoteLegal(this.clientPlayer, curPlayer)) {
-                curCard.addOnClick(this.getClickFuncString(pName));
-                curCard.addDivClass(VOTE_CLASS);
-            }
+            curCard.setBackgroundColorForPlayer(curPlayer, this.playerRoleVisible(curPlayer));
+            curCard.setAliveAppearance(curPlayer.alive);
+            curCard.setVoteHover(pName, roomState.playerVoteLegal(this.clientPlayer, curPlayer));
+            curCard.setCopResult(this.clientPlayer, curPlayer);
             // TODO: check for host or people who are disconnected, also cop stuff
-            // TODO: get rid of magic numbers
-            if (this.clientPlayer.role === 2 && curPlayer.copResult !== null) {
-                curCard.addDivClass(curPlayer.role === 1 ? ROLE_CLASSES[1] : ROLE_CLASSES[4]);
-            }
         }
         // set message and overwrite for special cases
         this.message = roomState.gameState === this.clientPlayer.role ||
@@ -106,13 +84,6 @@ class ClientState {
 
     clearPlayerCards() {
         this.playerCards = {};
-    }
-
-    /*
-    * generates the string of the to-be-evaluated function for on click
-    */
-    getClickFuncString(playerName) {
-        return CLICK_FUNC + '(\'' + playerName + '\')';
     }
 
     /*

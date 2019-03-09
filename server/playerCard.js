@@ -1,3 +1,14 @@
+const ROLE_CLASSES = [
+    'bannerDefault',
+    'bannerMafia',
+    'bannerCop',
+    'bannerDoctor',
+    'bannerTown'
+];
+const CLICK_FUNC = 'playerVote';
+const DEAD_CLASS = 'bannerDead';
+const VOTE_CLASS = 'bannerVotable';
+
 class PlayerCard {
 
     // CONSTRUCTOR
@@ -8,6 +19,33 @@ class PlayerCard {
     }
 
     // PUBLIC FUNCTIONS
+    setAliveAppearance(alive) {
+        if (!alive) {
+            this.addDivClass(DEAD_CLASS);
+        }
+    }
+
+    setBackgroundColorForPlayer(curPlayer, visibleToClient) {
+        this.addDivClass(visibleToClient ?
+            ROLE_CLASSES[curPlayer.role] : ROLE_CLASSES[0]);
+    }
+
+    setCopResult(clientPlayer, curPlayer) {
+        // TODO: get rid of magic numbers
+        if (clientPlayer.role === 2 && curPlayer.copResult !== null) {
+            this.addDivClass(curPlayer.role === 1 ? ROLE_CLASSES[1] : ROLE_CLASSES[4]);
+        }
+    }
+
+    setVoteHover(playerName, voteLegal) {
+        if (voteLegal) {
+            this.addOnClick(this.getClickFuncString(playerName));
+            this.addDivClass(VOTE_CLASS);
+        }
+    }
+
+
+    // PRIVATE FUNCTIONS
     /*
     * sets player card to default css styling
     */
@@ -28,6 +66,13 @@ class PlayerCard {
 
     addOnClick(funcString) {
         this.onClick = funcString;
+    }
+
+    /*
+    * generates the string of the to-be-evaluated function for on click
+    */
+    getClickFuncString(playerName) {
+        return CLICK_FUNC + '(\'' + playerName + '\')';
     }
 }
 
