@@ -151,7 +151,7 @@ class RoomState {
         for (var name in this.players) {
             var player = this.players[name];
             if (player.mafiaTarget) {
-                player.alive = player.doctorTarget;
+                player.alive = player.alive && player.doctorTarget;
             }
         }
     }
@@ -256,7 +256,7 @@ class RoomState {
     */
     getVoteQuotaForGameState(gs) {
         var quotas = [ 0, this.numMafia, this.numCops, this.numDoctors,
-            Math.ceil((this.numTown+1)/2), this.playerCount()+1 ];
+            Math.floor(this.playerCount()/2)+1, this.playerCount()+1 ];
         return quotas[gs];
     }
 

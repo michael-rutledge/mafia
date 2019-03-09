@@ -69,14 +69,16 @@ class ClientState {
                 curCard.addDivClass(VOTE_CLASS);
             }
             // TODO: check for host or people who are disconnected, also cop stuff
+            // TODO: get rid of magic numbers
+            if (this.clientPlayer.role === 2 && curPlayer.copResult !== null) {
+                curCard.addDivClass(curPlayer.role === 1 ? ROLE_CLASSES[1] : ROLE_CLASSES[4]);
+            }
         }
         // set message and overwrite for special cases
         this.message = roomState.gameState === this.clientPlayer.role ||
                 !this.clientPlayer.alive ||
-                roomState.gameState >= 5 ?
+                roomState.gameState >= 4 ?
             STATE_MESSAGES[roomState.gameState] : NIGHT_MESSAGE;
-        // TODO: get rid of magic numbers
-        this.message = roomState.gameState === 4 ? STATE_MESSAGES[4] : this.message;
     }
 
     /*
