@@ -49,9 +49,11 @@ class ClientState {
             curCard.setBackgroundColorForPlayer(curPlayer, this.playerRoleVisible(curPlayer));
             curCard.setAliveAppearance(curPlayer.alive);
             curCard.setVoteHover(pName, roomState.playerVoteLegal(this.clientPlayer, curPlayer));
+            curCard.setVoted(this.clientPlayer, curPlayer, roomState);
             curCard.setCopResult(this.clientPlayer, curPlayer);
             curCard.setClientPlayerAppearance(this.clientPlayer, curPlayer);
             curCard.setHostAppearance(curPlayer, roomState);
+            curCard.setVoteCounter(curPlayer, roomState);
             // TODO: check for host or people who are disconnected, also cop stuff
         }
         // set message and overwrite for special cases

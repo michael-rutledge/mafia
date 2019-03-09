@@ -73,6 +73,13 @@ class Player {
     }
 
     /*
+    * get the set of votes on a player for the given gameState
+    */
+    getVotesInGameState(gameState) {
+        return this[VOTE_KEYS[gameState-1]];
+    }
+
+    /*
     * to be called after transition to TOWN_TIME
     */
     resetTargets() {
@@ -82,9 +89,16 @@ class Player {
 
     /*
     * tally vote against this player from voting player name
+    * clicking again removes vote
     */
-    tallyVoteFromPlayer(votingName, gameState) {
-        this[VOTE_KEYS[gameState-1]][votingName] = 1;
+    tallyVoteFromPlayer(votingName, gameState, votingAgain) {
+        var votes = this.getVotesInGameState(gameState);
+        if (votingAgain) {
+            delete votes[votingName];
+        }
+        else {
+            votes[votingName] = 1;
+        }
     }
 
     /*
@@ -98,7 +112,16 @@ class Player {
     * get count of votes assigned to this player in current gamestate
     */
     voteCountInGameState(gameState) {
-        return Object.keys(this[VOTE_KEYS[gameState-1]]).length;
+        var votes = this.getVotesInGameState(gameState);
+        return votes ? Object.keys(votes).length : 0;
+    }
+
+    /*
+    * determine whether this player has voted for given player in given roomState
+    */
+    votedFor(player, roomState) {
+        var votes = player.getVotesInGameState(roomState.gameState);
+        return votes && votes[roomState.getNameFromPlayer(this)] !== undefined;
     }
 }
 

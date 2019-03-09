@@ -393,8 +393,9 @@ class RoomState {
     * given gameState
     */
     tallyVote(votingPlayer, votedPlayer, gs) {
+        var votingAgain = votingPlayer.votedFor(votedPlayer, this);
         this.clearVotesFromPlayer(votingPlayer);
-        votedPlayer.tallyVoteFromPlayer(this.getNameFromPlayer(votingPlayer), gs);
+        votedPlayer.tallyVoteFromPlayer(this.getNameFromPlayer(votingPlayer), gs, votingAgain);
     }
 
     /*

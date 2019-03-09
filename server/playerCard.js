@@ -8,6 +8,7 @@ const ROLE_CLASSES = [
 const CLICK_FUNC = 'playerVote';
 const DEAD_CLASS = 'bannerDead';
 const VOTE_CLASS = 'bannerVotable';
+const VOTED_CLASS = 'bannerVoted';
 
 class PlayerCard {
 
@@ -52,6 +53,20 @@ class PlayerCard {
         // TODO: get rid of magic numbers
         if (curPlayer.socketId === roomState.host && roomState.gameState === 0) {
             this.text = '<i>'+this.text+'</i>';
+        }
+    }
+
+    setVoteCounter(curPlayer, roomState) {
+        var curVoteCount = curPlayer.voteCountInGameState(roomState.gameState);
+        var voteQuota = roomState.getVoteQuotaForGameState(roomState.gameState);
+        if (curVoteCount > 0) {
+            this.text += ' ' + curVoteCount + '/' + voteQuota + ' votes';
+        }
+    }
+
+    setVoted(clientPlayer, curPlayer, roomState) {
+        if (clientPlayer.votedFor(curPlayer, roomState)) {
+            this.addDivClass(VOTED_CLASS);
         }
     }
 

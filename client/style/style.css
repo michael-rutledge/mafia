@@ -34,6 +34,12 @@
     padding: 3px 10px 3px 10px;
 }
 
+.bannerVoted {
+    cursor: pointer;
+    border: 2px solid red;
+    padding: 3px 10px 3px 10px;
+}
+
 .col-centered {
     float: none;
     margin: 0 auto;
