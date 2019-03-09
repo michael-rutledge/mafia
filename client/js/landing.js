@@ -14,6 +14,7 @@ var hostOptions = document.getElementById('hostOptions');
 var numMafia = document.getElementById('numMafia');
 var numCops = document.getElementById('numCops');
 var numDoctors = document.getElementById('numDoctors');
+var playAgainButton = document.getElementById('playAgainButton');
 
 // state variables
 var savedUserInfo;
@@ -54,6 +55,10 @@ document.getElementById('startButton').onclick = () => {
     socket.emit('startGame');
 };
 
+playAgainButton.onclick = () => {
+    socket.emit('startGame');
+};
+
 function playerVote(playerName) {
     socket.emit('playerVote', { playerName: playerName });
 }
@@ -87,6 +92,7 @@ socket.on('pushStateToClient', (roomState) => {
     stateMessage.innerHTML = roomState.clientState.message;
     setHostAndLobbyOptions(hostOptions, lobbyOptions, roomState, socket);
     setLeaveButtonVisible(roomState);
+    setPlayAgainButtonVisible(playAgainButton, roomState, socket);
 });
 
 socket.on('reconnect', () => {

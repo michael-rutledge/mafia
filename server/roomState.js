@@ -11,7 +11,7 @@ const SHOWDOWN      = 5;
 const MAFIA_WIN     = 6;
 const TOWN_WIN      = 7;
 // modifiable options and their constraints
-const OPTIONS = {
+const OPTION_LIMITS = {
     numMafia: {
         min: 1,
         max: 3
@@ -39,9 +39,14 @@ class RoomState {
     constructor() {
         this.gameState = LOBBY;
         this.host = null;
-        this.numMafia = 1;
-        this.numCops = 0;
-        this.numDoctors = 0;
+        this.options = {
+            numMafia: 1,
+            numCops: 0,
+            numDoctors: 0
+        };
+        this.numMafia = this.options.numMafia;
+        this.numCops = this.options.numCops;
+        this.numDoctors = this.options.numDoctors;
         this.numTown = 0;
         this.players = {};
         this.socketNames = {};
@@ -81,9 +86,9 @@ class RoomState {
     * return: bool exitStatus
     */
     changeOption(id, value) {
-        if (OPTIONS[id]) {
-            this[id] = Math.max(value, OPTIONS[id].min);
-            this[id] = Math.min(value, OPTIONS[id].max);
+        if (OPTION_LIMITS[id]) {
+            this.options[id] = Math.max(value, OPTION_LIMITS[id].min);
+            this.options[id] = Math.min(value, OPTION_LIMITS[id].max);
             return this.clientsUpdate();
         }
         return false;
@@ -134,7 +139,7 @@ class RoomState {
 
     startGame(socket) {
         // safeguard that only the host can start the game and only from lobby
-        if (this.socketIsHost(socket) && this.gameState === LOBBY &&
+        if (this.socketIsHost(socket) && this.gameInStartState() &&
                 this.rolesOkayForStart()) {
             this.prepAndStartNewGame();
             return this.clientsUpdate();
@@ -217,6 +222,13 @@ class RoomState {
             this.getPlayerFromName(name).updateClientStateFromRoomState(this);
         }
         return true;
+    }
+
+    /*
+    * return whether game can be started or restarted
+    */
+    gameInStartState() {
+        return this.gameState === LOBBY || this.gameState > SHOWDOWN;
     }
 
     /*
@@ -314,7 +326,7 @@ class RoomState {
     */
     prepAndStartNewGame() {
         this.resetPlayers(Player.TOWN);
-        this.assignRoles(this.numMafia, this.numCops, this.numDoctors);
+        this.assignRoles(this.options.numMafia, this.options.numCops, this.options.numDoctors);
         this.updateRoleCounts();
         this.gameState = MAFIA_TIME;
     }

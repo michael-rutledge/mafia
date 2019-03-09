@@ -118,9 +118,9 @@ function pushStateToClient(room) {
                     name: roomState.socketNames[roomState.host],
                     socket: roomState.host
                 },
-                numMafia: roomState.numMafia,
-                numCops: roomState.numCops,
-                numDoctors: roomState.numDoctors,
+                numMafia: roomState.options.numMafia,
+                numCops: roomState.options.numCops,
+                numDoctors: roomState.options.numDoctors,
                 clientState: roomState.players[roomState.socketNames[s]].clientState.getCompressed()
             });
         }

@@ -34,3 +34,8 @@ function setRoleHeader(roomState) {
         'Your role: ' + roomState.clientState.role : 'You are dead. :( All roles are now visible.';
 }
 
+function setPlayAgainButtonVisible(button, roomState, curSocket) {
+    // TODO: get rid of magic numbers
+    button.style.display = (roomState.gameState > 5 && roomState.host.socket === curSocket.id) ?
+        '' : 'none';
+}
