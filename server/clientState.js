@@ -45,11 +45,13 @@ class ClientState {
             var curPlayer = roomState.getPlayerFromName(pName);
             this.playerCards[pName] = new PlayerCard(pName);
             var curCard = this.playerCards[pName];
-            this.clearPlayerCard(curCard);
+            curCard.clearAppearance();
             curCard.setBackgroundColorForPlayer(curPlayer, this.playerRoleVisible(curPlayer));
             curCard.setAliveAppearance(curPlayer.alive);
             curCard.setVoteHover(pName, roomState.playerVoteLegal(this.clientPlayer, curPlayer));
             curCard.setCopResult(this.clientPlayer, curPlayer);
+            curCard.setClientPlayerAppearance(this.clientPlayer, curPlayer);
+            curCard.setHostAppearance(curPlayer, roomState);
             // TODO: check for host or people who are disconnected, also cop stuff
         }
         // set message and overwrite for special cases
@@ -74,14 +76,6 @@ class ClientState {
 
 
     // PRIVATE FUNCTIONS
-    /*
-    * clears the div classes of a player card to be set again according to room state
-    */
-    clearPlayerCard(card) {
-        card.clearDivClasses();
-        card.clearOnClick();
-    }
-
     clearPlayerCards() {
         this.playerCards = {};
     }

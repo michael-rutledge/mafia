@@ -5,7 +5,7 @@ const LOBBY = 0;
 // Host will be italicized in lobby.
 function getPlayerBanner(player) {
     return '<div class="' + player.divClasses.join(' ') +
-        '" onclick="' + player.onClick + '">' + player.name + '</div>';
+        '" onclick="' + player.onClick + '">' + player.text + '</div>';
 }
 
 function setHostAndLobbyOptions(hoptions, loptions, state, curSocket) {

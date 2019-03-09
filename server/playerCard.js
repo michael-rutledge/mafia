@@ -14,11 +14,16 @@ class PlayerCard {
     // CONSTRUCTOR
     constructor(name) {
         this.name = name;
+        this.text = this.name;
+        this.clearAppearance();
+    }
+
+    // PUBLIC FUNCTIONS
+    clearAppearance() {
         this.clearDivClasses();
         this.clearOnClick();
     }
 
-    // PUBLIC FUNCTIONS
     setAliveAppearance(alive) {
         if (!alive) {
             this.addDivClass(DEAD_CLASS);
@@ -30,10 +35,23 @@ class PlayerCard {
             ROLE_CLASSES[curPlayer.role] : ROLE_CLASSES[0]);
     }
 
+    setClientPlayerAppearance(clientPlayer, curPlayer) {
+        if (clientPlayer === curPlayer) {
+            this.text = '<b>'+this.text+'</b>';
+        }
+    }
+
     setCopResult(clientPlayer, curPlayer) {
         // TODO: get rid of magic numbers
         if (clientPlayer.role === 2 && curPlayer.copResult !== null) {
             this.addDivClass(curPlayer.role === 1 ? ROLE_CLASSES[1] : ROLE_CLASSES[4]);
+        }
+    }
+
+    setHostAppearance(curPlayer, roomState) {
+        // TODO: get rid of magic numbers
+        if (curPlayer.socketId === roomState.host && roomState.gameState === 0) {
+            this.text = '<i>'+this.text+'</i>';
         }
     }
 
