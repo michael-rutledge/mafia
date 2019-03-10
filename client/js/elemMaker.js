@@ -39,3 +39,9 @@ function setPlayAgainButtonVisible(button, roomState, curSocket) {
     button.style.display = (roomState.gameState > 5 && roomState.host.socket === curSocket.id) ?
         '' : 'none';
 }
+
+function setEndButtonVisible(button, roomState, curSocket) {
+    // TODO: get rid of magic numbers
+    button.style.display = (roomState.gameState > 0 && roomState.host.socket === curSocket.id) ?
+        '' : 'none';
+}

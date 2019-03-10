@@ -95,6 +95,18 @@ class RoomState {
     }
 
     /*
+    * end the game at the host's discretion and bring game back to lobby
+    */
+    endGame(socket) {
+        if (this.socketIsHost(socket) && this.gameState > LOBBY) {
+            this.resetPlayers();
+            this.gameState = LOBBY;
+            return this.clientsUpdate();
+        }
+        return false;
+    }
+
+    /*
     * attempt player vote
     */
     playerVote(votingSocket, votedName) {

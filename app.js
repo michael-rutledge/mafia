@@ -70,6 +70,13 @@ sio.sockets.on('connection', (socket) => {
         }
     });
 
+    socket.on('endGame', () => {
+        var room = getRoomOfSocket(socket);
+        if (MafiaManager.endGame(socket, room)) {
+            pushStateToClient(room);
+        }
+    });
+
     socket.on('playerVote', (data) => {
         var room = getRoomOfSocket(socket);
         if (MafiaManager.playerVote(socket, data.playerName, room)) {

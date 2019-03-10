@@ -58,6 +58,10 @@ function startGame(socket, room) {
     return roomExists(room) ? getRoomState(room).startGame(socket) : false;
 }
 
+function endGame(socket, room) {
+    return roomExists(room) ? getRoomState(room).endGame(socket) : false;
+}
+
 
 // private utilities
 function constructNewRoomState(room) {
@@ -89,3 +93,4 @@ module.exports.getRoomState = getRoomState;
 module.exports.touchRoomState = touchRoomState;
 module.exports.removeRoom = removeRoom;
 module.exports.startGame = startGame;
+module.exports.endGame = endGame;
