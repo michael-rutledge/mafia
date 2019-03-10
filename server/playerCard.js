@@ -56,11 +56,20 @@ class PlayerCard {
         }
     }
 
-    setVoteCounter(curPlayer, roomState) {
+    setVoteCounter(clientPlayer, curPlayer, roomState) {
         var curVoteCount = curPlayer.voteCountInGameState(roomState.gameState);
         var voteQuota = roomState.getVoteQuotaForGameState(roomState.gameState);
-        if (curVoteCount > 0) {
+        // TODO: get rid of magic numbers
+        if (roomState.gameState !== 5 && curVoteCount > 0) {
             this.text += ' ' + curVoteCount + '/' + voteQuota + ' votes';
+        }
+        else if (roomState.gameState === 5) {
+            if (curPlayer.votedFor(clientPlayer, roomState)) {
+                this.text += ' <i>"Truce?"</i>';
+            }
+            else if (clientPlayer.votedFor(curPlayer, roomState)) {
+                this.text += ' <i>"Hmm..."</i>'
+            }
         }
     }
 
